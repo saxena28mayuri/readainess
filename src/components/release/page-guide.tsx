@@ -54,8 +54,8 @@ const terms: { term: string; body: React.ReactNode }[] = [
     body: "Worked out by fixed rules, not by AI. Any failed blocking gate gives No-Go. Any blocking gate still Unknown, or any advisory problem, gives Conditional. Otherwise Go.",
   },
   {
-    term: "Memo and decision",
-    body: "The memo is an AI summary in which every claim links to its gate (G1, G2…). A person then records the call; going against the recommendation needs a written reason.",
+    term: "Brief, AI and decision",
+    body: "The decision brief lists what blocks the release and the next step for each, with links to the gates. AI reads documents (gates marked AI-read) and suggests next steps; numbers, sign-offs and the recommendation come from fixed rules. A person records the call, with a reason when they disagree.",
   },
 ];
 

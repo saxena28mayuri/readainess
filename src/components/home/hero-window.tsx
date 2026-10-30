@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { recommendationLabel } from "@/lib/format";
 import { evaluateRelease } from "@/lib/readiness/evaluate";
 import { demoReviews } from "@/lib/readiness/demo";
+import { parseBrief } from "@/lib/readiness/brief";
 import { apiGatewayCutover } from "@/lib/readiness/samples";
 import type { Gate, Recommendation } from "@/lib/readiness/types";
 import { GateStatusMark, RecommendationIcon, recTextTone } from "@/components/verdict";
@@ -34,8 +35,8 @@ function tickFor(kind: Gate["kind"], status: string): TickKind {
   return kind === "metric" ? "computed" : kind === "document" ? "quoted" : "signed";
 }
 
-/** First sentence of the memo, citations removed, for the window's summary. */
-const memoLead = review.memo.split("\n")[0].replace(/\s*\[[^\]]+\]/g, "");
+/** The brief's one-line summary, for the window. */
+const memoLead = parseBrief(review.memo)?.summary ?? "";
 
 export function HeroWindow() {
   const ref = useRef<HTMLDivElement>(null);

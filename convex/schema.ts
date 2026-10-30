@@ -92,6 +92,16 @@ export default defineSchema({
     // can see and edit the release. Samples have none and are read-only.
     workspaceId: v.optional(v.string()),
     copiedFrom: v.optional(v.string()),
+    // The latest change to the release's data or checklist, so the release
+    // page can say when a shown check is out of date.
+    lastChange: v.optional(
+      v.object({
+        at: v.number(),
+        kind: v.union(v.literal("import"), v.literal("checklist")),
+        summary: v.string(),
+        files: v.optional(v.array(v.string())),
+      }),
+    ),
   })
     .index("by_slug", ["slug"])
     .index("by_workspace", ["workspaceId"]),

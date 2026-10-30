@@ -257,6 +257,7 @@ export function GateTable({
                           {gate.blocking ? "Blocking" : "Advisory"}
                         </span>
                         <span className="text-muted-foreground"> · {gateKindLabel[gate.kind]}</span>
+                        {gate.kind === "document" && <span className="ml-1 inline-block rounded-sm bg-pencil-soft px-1 text-[11px] font-medium whitespace-nowrap text-pencil" title="Judged by AI from the document, with a quote">AI-read</span>}
                       </span>
                       <span className="block text-muted-foreground">
                         <span className="md:hidden" aria-hidden>· </span>

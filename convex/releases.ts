@@ -149,8 +149,9 @@ export const applyImport = mutation({
   args: {
     releaseId: v.id("releases"),
     signals: signalsValidator,
+    files: v.optional(v.array(v.string())),
   },
-  handler: async (ctx, { releaseId, signals }) => {
+  handler: async (ctx, { releaseId, signals, files }) => {
     const workspace = await requireWorkspace(ctx);
     const release = await ownedRelease(ctx, releaseId, workspace.id);
 
@@ -186,12 +187,27 @@ export const applyImport = mutation({
       throw new Error("Too many signals on one release");
     }
 
-    await ctx.db.patch(release._id, { signals: { metrics, signoffs, documents } });
-    return {
+    const counts = {
       metrics: Object.keys(signals.metrics).length,
       signoffs: Object.keys(signals.signoffs).length,
       documents: Object.keys(signals.documents).length,
     };
+    const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
+    const summary = [
+      counts.metrics && plural(counts.metrics, "metric"),
+      counts.signoffs && plural(counts.signoffs, "sign-off"),
+      counts.documents && plural(counts.documents, "document"),
+    ].filter(Boolean).join(", ");
+    await ctx.db.patch(release._id, {
+      signals: { metrics, signoffs, documents },
+      lastChange: {
+        at: Date.now(),
+        kind: "import",
+        summary: summary || "no values",
+        files: files?.slice(0, 20).map((f) => f.slice(0, 160)),
+      },
+    });
+    return counts;
   },
 });
 
@@ -228,6 +244,7 @@ export const updateGates = mutation({
     }
     await ctx.db.patch(release._id, {
       gates: gates.map((g) => ({ ...g, title: g.title.trim(), owner: g.owner.trim() })),
+      lastChange: { at: Date.now(), kind: "checklist", summary: `${gates.length} gates` },
     });
   },
 });

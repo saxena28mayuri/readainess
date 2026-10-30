@@ -1,4 +1,7 @@
 import type { DocumentVerdict } from "./types";
+import { validateBrief } from "./brief";
+import { evaluateRelease } from "./evaluate";
+import { apiGatewayCutover } from "./samples";
 
 // Precomputed AI results for the sample releases, used in demo mode (no API
 // key). Every quote is copied verbatim from the sample documents, so the
@@ -76,3 +79,27 @@ Every blocking gate passes: no open Sev1/Sev2 bugs [sev-bugs], payment regressio
 One advisory gap: the support playbook has no guidance for decline code 57 [release-notes]. Ship once Support Ops confirms the section will be written before launch.`,
   },
 };
+
+// The cutover sample's brief, as the AI review writes it: next steps grounded
+// in the sample documents. Validated against the sample's own evaluation.
+
+{
+  const review = demoReviews["api-gateway-cutover"];
+  review.memo = JSON.stringify(
+    validateBrief(
+      {
+        summary: "No-Go for the Nov 14 cutover: the rollback is unrehearsed and the 50% traffic shift has no owner.",
+        items: [
+          { gateId: "rollback-plan", issue: "The rollback has never been rehearsed; staging run is only scheduled.", action: "Run the staging rehearsal on Nov 10 and record how long it took." },
+          { gateId: "runbook-oncall", issue: "The 50% traffic shift step has no named owner or escalation contact.", action: "Name an owner and an escalation contact for the T+15 step." },
+          { gateId: "product-signoff", issue: "Product owner has not signed off yet.", action: "Ask the product owner to approve once the runbook is fixed." },
+          { gateId: "partner-comms", issue: "86% of partner API consumers notified; target is 100%.", action: "Notify the remaining partners before T-60." },
+        ],
+      },
+      apiGatewayCutover,
+      evaluateRelease(apiGatewayCutover, review.verdicts),
+      "ai",
+      2,
+    ),
+  );
+}

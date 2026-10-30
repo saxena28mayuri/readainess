@@ -1,83 +1,123 @@
 "use client";
 
-import { Fragment } from "react";
-import type { Release } from "@/lib/readiness/types";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { parseBrief, rulesBrief, type BriefItem } from "@/lib/readiness/brief";
+import type { Evaluation, Release } from "@/lib/readiness/types";
 
-const CITATION = /\[([a-z0-9-]+)\]/g;
-
-/** Renders memo text with [gate-id] citations as links to the gate row. */
-function withCitations(
-  text: string,
-  release: Release,
-  onCite: (gateId: string) => void,
-) {
-  const titles = new Map(release.gates.map((g) => [g.id, g.title]));
-  const parts: React.ReactNode[] = [];
-  let last = 0;
-  for (const match of text.matchAll(CITATION)) {
-    const id = match[1];
-    const index = match.index ?? 0;
-    parts.push(text.slice(last, index));
-    if (titles.has(id)) {
-      const n = release.gates.findIndex((g) => g.id === id) + 1;
-      parts.push(
-        <button
-          key={`${id}-${index}`}
-          type="button"
-          onClick={() => onCite(id)}
-          title={`Go to gate: ${titles.get(id)}`}
-          className="mx-0.5 inline-flex h-[18px] items-center rounded-sm bg-pencil-soft px-1 align-[1px] font-mono text-[11px] font-medium text-pencil hover:bg-pencil hover:text-white"
-        >
-          G{n}
-        </button>,
-      );
-    }
-    // Anything else in brackets (e.g. a stray "[targetDate]") is dropped.
-    last = index + match[0].length;
-  }
-  parts.push(text.slice(last));
-  return parts;
-}
-
+/**
+ * The decision brief: blockers and advisory items, each with its next step,
+ * and the gates already passing. Written by AI when a check ran with a key,
+ * otherwise built from the gate results. Gate references jump to the row.
+ */
 export function Memo({
   release,
+  evaluation,
   memo,
-  source,
+  model,
   onCite,
 }: {
   release: Release;
+  evaluation: Evaluation;
   memo?: string;
-  source: "recorded" | "sample" | "unchecked";
+  model?: string;
   onCite: (gateId: string) => void;
 }) {
-  const paragraphs = (memo ?? "").split(/\n\s*\n/).filter(Boolean);
+  const brief = parseBrief(memo) ?? rulesBrief(release, evaluation);
+  const byId = new Map(release.gates.map((g, i) => [g.id, { gate: g, n: i + 1 }]));
+  const ready = release.gates.filter((g) => evaluation.results.find((r) => r.gateId === g.id)?.status === "pass");
+  const ai = brief.source === "ai";
+  const read = brief.documentsRead ?? release.gates.filter((g) => g.kind === "document").length;
+
+  function Item({ item, tone }: { item: BriefItem; tone: "nogo" | "cond" }) {
+    const ref = byId.get(item.gateId);
+    if (!ref) return null;
+    return (
+      <li className="py-3">
+        <button
+          type="button"
+          onClick={() => onCite(item.gateId)}
+          className="group flex w-full items-start gap-2 text-left"
+          title="Show this gate in the table"
+        >
+          <span className={cn("mt-0.5 shrink-0 rounded-sm px-1 text-[11px] font-semibold", tone === "nogo" ? "bg-nogo-soft text-nogo" : "bg-cond-soft text-cond")}>
+            G{ref.n}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[14px] font-medium group-hover:underline">{ref.gate.title}</span>
+            <span className="mt-0.5 block text-[13px] leading-5 text-muted-foreground">{item.issue}</span>
+          </span>
+        </button>
+        <p className="mt-1.5 ml-8 flex items-start gap-1.5 text-[13px] leading-5">
+          <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-pencil" aria-label="Next step" />
+          <span>{item.action}</span>
+        </p>
+      </li>
+    );
+  }
+
   return (
-    <section aria-labelledby="memo-heading" className="rounded-lg border bg-sheet">
+    <section aria-labelledby="brief-heading" className="rounded-lg border bg-sheet">
       <div className="border-b px-4 py-3">
-        <h2 id="memo-heading" className="text-base font-semibold">
-          Go/no-go memo
-        </h2>
+        <h2 id="brief-heading" className="text-base font-semibold">Decision brief</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {source === "sample" ? "Sample draft" : "AI draft"} · every claim
-          cites its gate
+          {ai ? <>Drafted by AI{model && model !== "demo" ? <> · {model}</> : " · sample review"}</> : "Built from the gate results"}
         </p>
       </div>
-      <div className="space-y-3 px-4 py-4 text-sm leading-6">
-        {paragraphs.length === 0 ? (
-          <p className="text-muted-foreground">
-            No memo for this check. Run a readiness check with AI review to
-            draft one.
-          </p>
+
+      <div className="px-4 pt-3">
+        <p className="text-[15px] leading-6 font-medium">{brief.summary}</p>
+      </div>
+
+      {brief.blockers.length > 0 && (
+        <div className="px-4 pt-4">
+          <h3 className="text-xs font-semibold text-nogo">Blocking · {brief.blockers.length}</h3>
+          <ul className="divide-y divide-rule">
+            {brief.blockers.map((i) => <Item key={i.gateId} item={i} tone="nogo" />)}
+          </ul>
+        </div>
+      )}
+
+      {brief.advisory.length > 0 && (
+        <div className="px-4 pt-3">
+          <h3 className="text-xs font-semibold text-cond">Advisory · {brief.advisory.length}</h3>
+          <ul className="divide-y divide-rule">
+            {brief.advisory.map((i) => <Item key={i.gateId} item={i} tone="cond" />)}
+          </ul>
+        </div>
+      )}
+
+      <div className="px-4 pt-3 pb-4">
+        <h3 className="text-xs font-semibold text-go">Ready · {ready.length} of {release.gates.length}</h3>
+        {ready.length === 0 ? (
+          <p className="mt-1.5 text-[13px] text-muted-foreground">No gate has passing evidence yet.</p>
         ) : (
-          paragraphs.map((p, i) => (
-            <p key={i} className={i === 0 ? "font-medium" : undefined}>
-              {withCitations(p, release, onCite).map((part, j) => (
-                <Fragment key={j}>{part}</Fragment>
-              ))}
-            </p>
-          ))
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {ready.map((g) => (
+              <li key={g.id}>
+                <button type="button" onClick={() => onCite(g.id)} className="rounded-md bg-go-soft px-2 py-1 text-[12px] font-medium text-go hover:underline">
+                  G{byId.get(g.id)!.n} {g.title}
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
+
+      <p className="flex items-start gap-2 border-t bg-muted/60 px-4 py-3 text-[12px] leading-5 text-muted-foreground">
+        <Sparkles className="mt-0.5 size-3.5 shrink-0 text-pencil" aria-hidden />
+        {ai ? (
+          <span>
+            AI read {read} document{read === 1 ? "" : "s"} and suggested the next steps. Numbers and sign-offs were checked by fixed
+            rules, without AI, and so was the recommendation.
+          </span>
+        ) : (
+          <span>
+            No AI in this brief: each item is the gate’s result and its standard next step. Run a readiness check with your AI key to
+            have documents reviewed and next steps tailored to them.
+          </span>
+        )}
+      </p>
     </section>
   );
 }

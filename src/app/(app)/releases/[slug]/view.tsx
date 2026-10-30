@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useAction, useMutation } from "convex/react";
 import { CalendarDays, ListChecks, Loader2, Play, Upload } from "lucide-react";
 import { api } from "../../../../../convex/_generated/api";
-import { describeDaysUntil, formatDate, releaseTypeLabel } from "@/lib/format";
+import { describeDaysUntil, formatDate, releaseTypeLabel, timeAgo } from "@/lib/format";
 import { errorText, useAiKey } from "@/lib/settings";
 import { currentView, demoFor, useReleaseDetail } from "@/lib/use-checks";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { Memo } from "@/components/release/memo";
 import { DecisionPanel } from "@/components/release/decision-panel";
 import { PageGuide } from "@/components/release/page-guide";
 import { DeleteRelease } from "@/components/release/delete-release";
+import { NextSteps } from "@/components/release/next-steps";
 
 export default function ReleasePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -53,6 +54,14 @@ export default function ReleasePage() {
   }
 
   const view = currentView(release, history?.[0]);
+  const s = release.signals;
+  const evidence = [
+    [Object.keys(s.metrics).length, "metric"],
+    [Object.keys(s.signoffs).length, "sign-off"],
+    [Object.keys(s.documents).length, "document"],
+  ] as const;
+  const onFile = evidence.filter(([n]) => n > 0).map(([n, w]) => `${n} ${w}${n === 1 ? "" : "s"}`).join(", ");
+  const change = release.lastChange;
 
   async function runCheck() {
     if (!release || !signedIn) return;
@@ -102,6 +111,14 @@ export default function ReleasePage() {
             </span>
             <span aria-hidden>·</span>
             <span>{release.gates.length} gates</span>
+            <span aria-hidden>·</span>
+            <span>Evidence on file: {onFile || "none yet"}</span>
+            {change && (
+              <>
+                <span aria-hidden>·</span>
+                <span>{change.kind === "import" ? "Last import" : "Checklist edited"} {timeAgo(change.at)}</span>
+              </>
+            )}
           </p>
           <p className="mt-2 max-w-[70ch] text-sm leading-6">{release.summary}</p>
         </div>
@@ -136,7 +153,7 @@ export default function ReleasePage() {
             ) : (
               <Play aria-hidden />
             )}
-            {running ? (hasKey ? "Reviewing documents and drafting memo…" : "Running check…") : "Run readiness check"}
+            {running ? (hasKey ? "Reviewing documents and drafting the brief…" : "Running check…") : "Run readiness check"}
           </Button>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -163,6 +180,18 @@ export default function ReleasePage() {
 
       {/* From xl the memo and decision sit beside the gates; below that they
           follow the gates, in reading order. */}
+      <NextSteps
+        release={release}
+        slug={release.slug}
+        canEdit={release.canEdit}
+        checkedAt={view.checkedAt}
+        evaluationId={view.evaluationId}
+        decisions={decisions}
+        hasKey={hasKey}
+        running={running}
+        onRunCheck={runCheck}
+      />
+
       <PageGuide checklistHref={`/releases/${release.slug}/gates`} />
 
       <div className="mt-6 grid gap-6 min-[1600px]:grid-cols-[minmax(0,1fr)_400px]">
@@ -176,11 +205,12 @@ export default function ReleasePage() {
           />
           {history && <HistoryStrip release={release} history={history} />}
         </div>
-        <aside className="grid items-start gap-6 lg:grid-cols-2 min-[1600px]:sticky min-[1600px]:top-6 min-[1600px]:grid-cols-1 min-[1600px]:self-start">
+        <aside className="grid items-start gap-6 lg:max-[1599px]:grid-cols-2 min-[1600px]:sticky min-[1600px]:top-6 min-[1600px]:self-start">
           <Memo
             release={release}
+            evaluation={view.evaluation}
             memo={view.memo}
-            source={view.source}
+            model={view.model}
             onCite={cite}
           />
           <DecisionPanel

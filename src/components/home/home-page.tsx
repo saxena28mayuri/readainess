@@ -109,23 +109,25 @@ export function HomePage() {
         </header>
 
         <main>
-          <section className="mx-auto max-w-[1280px] px-[var(--m)] pt-[clamp(40px,7vw,96px)]">
-            <motion.h1 {...enter(reduce)} className="max-w-[16ch] text-[clamp(2.75rem,6.6vw,6rem)] leading-[0.97] font-semibold tracking-[-0.035em] text-balance">
-              Release decisions you can defend.
-            </motion.h1>
-            <motion.div {...enter(reduce, 1)} className="mt-8 grid gap-7 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-16">
-              <p className="max-w-[62ch] text-[clamp(1.0625rem,1rem+0.3vw,1.25rem)] leading-[1.55] text-[#2c3344]">
-                ReadAIness checks every release against the gates your team agreed, shows the evidence for each one, and records
-                who made the go/no-go call.
-              </p>
-              <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-                <Link href="/sign-up" className="inline-flex items-center gap-2 rounded-lg bg-[#1638b8] px-5 py-3 text-[15px] font-medium text-white transition-colors hover:bg-[#102b92] active:scale-[.98]">
-                  Start free <ArrowRight className="size-4" aria-hidden />
-                </Link>
-                <a href="#try" className="rounded-lg bg-[#ecece7] px-5 py-3 text-[15px] font-medium transition-colors hover:bg-[#e2e2dc]">Try it on sample data</a>
-              </div>
-            </motion.div>
-            <motion.div {...enter(reduce, 2)} className="mt-[clamp(40px,6vw,72px)]">
+          <section className="mx-auto max-w-[1280px] px-[var(--m)] pt-[clamp(24px,4vw,56px)]">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-14">
+              <motion.h1 {...enter(reduce)} className="text-[clamp(2.75rem,5.4vw,5rem)] leading-[0.98] font-semibold tracking-[-0.035em] text-balance">
+                Release decisions you can defend.
+              </motion.h1>
+              <motion.div {...enter(reduce, 1)}>
+                <p className="text-[clamp(1.0625rem,1rem+0.25vw,1.1875rem)] leading-[1.55] text-pretty text-[#2c3344]">
+                  ReadAIness checks every release against the gates your team agreed, shows the evidence for each one, and
+                  records who made the go/no-go call.
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <Link href="/sign-up" className="inline-flex items-center gap-2 rounded-lg bg-[#1638b8] px-5 py-3 text-[15px] font-medium text-white transition-colors hover:bg-[#102b92] active:scale-[.98]">
+                    Start free <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                  <a href="#try" className="rounded-lg bg-[#ecece7] px-5 py-3 text-[15px] font-medium transition-colors hover:bg-[#e2e2dc]">Try it on sample data</a>
+                </div>
+              </motion.div>
+            </div>
+            <motion.div {...enter(reduce, 2)} className="mt-[clamp(28px,3.5vw,48px)]">
               <HeroWindow />
               <p className="mt-3 text-[14px] text-[#525a6b]">A sample cutover being checked. Every result comes from the product’s rules engine.</p>
             </motion.div>

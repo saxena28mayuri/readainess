@@ -30,6 +30,28 @@ const ops: { value: ComparisonOp; label: string }[] = [
   { value: "==", label: "exactly" },
 ];
 
+type Problems = Partial<Record<"title" | "owner" | "rule", string>>;
+
+const KEY_PATTERN = /^[A-Za-z][A-Za-z0-9 _-]{0,47}$/;
+
+/** The same rules the server applies, checked before saving. */
+function problemsOf(g: Gate): Problems {
+  const p: Problems = {};
+  if (!g.title.trim()) p.title = "Give the gate a title.";
+  else if (g.title.length > 120) p.title = "Keep the title under 120 characters.";
+  if (!g.owner.trim()) p.owner = "Name an owner.";
+  if (g.kind === "metric") {
+    if (!KEY_PATTERN.test(g.metric.signal)) p.rule = "Name the metric: start with a letter, then letters, numbers, spaces, - or _.";
+    else if (!Number.isFinite(g.metric.target)) p.rule = "Set the target as a number.";
+  } else if (g.kind === "document") {
+    if (!KEY_PATTERN.test(g.document.document)) p.rule = "Name the document, starting with a letter (for example rollback).";
+    else if (g.document.question.trim().length < 10) p.rule = "Write the question the AI must answer (at least 10 characters).";
+  } else if (!KEY_PATTERN.test(g.signoff.role)) {
+    p.rule = "Name the role that signs off, starting with a letter.";
+  }
+  return p;
+}
+
 function newId(title: string) {
   const base = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 36) || "gate";
   return `${base}-${Math.random().toString(36).slice(2, 6)}`;
@@ -58,6 +80,7 @@ export default function GatesEditor() {
   const [draft, setDraft] = useState<Gate[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tried, setTried] = useState(false);
 
   if (release === null) {
     return (
@@ -85,6 +108,14 @@ export default function GatesEditor() {
 
   async function save() {
     if (!release) return;
+    setTried(true);
+    const bad = gates.findIndex((g) => Object.keys(problemsOf(g)).length > 0);
+    if (bad >= 0) {
+      const count = gates.filter((g) => Object.keys(problemsOf(g)).length > 0).length;
+      setError(`${count} gate${count === 1 ? " needs" : "s need"} attention before saving.`);
+      document.getElementById(`gate-${gates[bad].id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -128,6 +159,7 @@ export default function GatesEditor() {
             >
               <GateCard
                 gate={gate}
+                problems={tried ? problemsOf(gate) : {}}
                 index={i}
                 count={gates.length}
                 disabled={!editable}
@@ -170,16 +202,16 @@ export default function GatesEditor() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="fixed inset-x-0 bottom-4 z-30 mx-auto flex w-[min(640px,calc(100%-2rem))] flex-wrap items-center justify-between gap-3 rounded-lg border bg-rail px-4 py-3 text-rail-foreground shadow-[0_18px_40px_-18px_rgba(18,61,51,0.7)] lg:left-64"
+            className="fixed inset-x-0 bottom-4 z-30 mx-auto flex w-[min(640px,calc(100%-2rem))] flex-wrap items-center justify-between gap-3 rounded-lg bg-[#0b1220] px-4 py-3 text-white shadow-[0_18px_40px_-18px_rgba(11,18,32,0.6)] lg:left-64"
             role="region"
             aria-label="Unsaved changes"
           >
-            <span className="text-sm">{error ? <span className="text-[#ffb4a6]">{error}</span> : "You have unsaved changes to the checklist."}</span>
+            <span className="text-sm">{error ? <span className="font-medium text-[#ffb4ab]">{error}</span> : "You have unsaved changes to the checklist."}</span>
             <span className="flex gap-2">
-              <Button variant="ghost" size="sm" className="text-rail-foreground hover:bg-rail-raised hover:text-rail-foreground" onClick={() => { setDraft(null); setError(null); }}>
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white" onClick={() => { setDraft(null); setError(null); setTried(false); }}>
                 Discard
               </Button>
-              <Button size="sm" className="bg-rail-foreground text-rail hover:bg-white" onClick={save} disabled={saving}>
+              <Button size="sm" className="bg-white text-[#0b1220] hover:bg-white/90" onClick={save} disabled={saving}>
                 {saving && <Loader2 className="animate-spin" aria-hidden />} Save checklist
               </Button>
             </span>
@@ -192,6 +224,7 @@ export default function GatesEditor() {
 
 function GateCard({
   gate,
+  problems,
   index,
   count,
   disabled,
@@ -200,6 +233,7 @@ function GateCard({
   onRemove,
 }: {
   gate: Gate;
+  problems: Problems;
   index: number;
   count: number;
   disabled: boolean;
@@ -209,7 +243,7 @@ function GateCard({
 }) {
   const field = "h-8 rounded-md border border-input bg-sheet px-2 text-[13px] disabled:opacity-70";
   return (
-    <fieldset disabled={disabled} className="rounded-lg border bg-sheet">
+    <fieldset id={`gate-${gate.id}`} disabled={disabled} className={cn("scroll-mt-24 rounded-lg border bg-sheet", Object.keys(problems).length > 0 && "border-nogo/50")}>
       <legend className="sr-only">Gate {index + 1}</legend>
       <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3">
         <span className="font-mono text-[11px] text-pencil">G{index + 1}</span>
@@ -218,8 +252,9 @@ function GateCard({
           onChange={(e) => onChange({ ...gate, title: e.target.value })}
           placeholder="What must be true, e.g. No open Sev1/Sev2 bugs"
           aria-label="Gate title"
+          aria-invalid={!!problems.title}
           maxLength={120}
-          className="h-8 min-w-0 flex-1 font-medium"
+          className={cn("h-8 min-w-0 flex-1 font-medium", problems.title && "border-nogo")}
         />
         <div className="flex items-center gap-1">
           <button type="button" onClick={() => onMove(-1)} disabled={index === 0} aria-label="Move up" className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"><ArrowUp className="size-4" /></button>
@@ -229,6 +264,11 @@ function GateCard({
       </div>
 
       <div className="space-y-4 px-4 py-4">
+        {Object.keys(problems).length > 0 && (
+          <ul role="alert" className="space-y-0.5 rounded-md bg-nogo-soft px-3 py-2 text-[13px] text-nogo">
+            {Object.values(problems).map((m) => <li key={m}>{m}</li>)}
+          </ul>
+        )}
         <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Kind of check">
           {kinds.map((k) => (
             <button
@@ -325,7 +365,7 @@ function GateCard({
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t pt-3 text-sm">
           <label className="flex items-center gap-2">
             <span className="text-muted-foreground">Owner</span>
-            <Input value={gate.owner} onChange={(e) => onChange({ ...gate, owner: e.target.value })} placeholder="e.g. QA lead" maxLength={60} className="h-8 w-40 text-[13px]" />
+            <Input value={gate.owner} onChange={(e) => onChange({ ...gate, owner: e.target.value })} placeholder="e.g. QA lead" maxLength={60} aria-invalid={!!problems.owner} className={cn("h-8 w-40 text-[13px]", problems.owner && "border-nogo")} />
           </label>
           <label className="flex items-center gap-2">
             <span className="text-muted-foreground">Area</span>

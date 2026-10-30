@@ -22,12 +22,3 @@ describe("home page demo", () => {
   });
 });
 
-import { keepGateCitations } from "../ai/review";
-import { demoRelease } from "./demo";
-
-describe("memo citations", () => {
-  it("keeps gate ids and drops other bracketed tokens", () => {
-    const memo = "No-Go for ADO on 2026-10-31 [targetDate]. Bugs remain [sev-bugs].";
-    expect(keepGateCitations(memo, demoRelease)).toBe("No-Go for ADO on 2026-10-31. Bugs remain [sev-bugs].");
-  });
-});

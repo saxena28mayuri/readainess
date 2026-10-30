@@ -26,7 +26,8 @@ Return JSON:
             "byColumn"?: exactHeader, "noteColumn"?: exactHeader,
             "status"?: "approved" | "pending" | "rejected"}]}
 Use "counts" when a metric is a number of matching rows (for example open Sev1/Sev2 bugs: filter status values that mean open, priority or severity values that mean Sev1/Sev2, and issue type values that mean bug).
-Use "cells" when a value is written in one cell; "row" is the row number shown in the sample. For a sign-off, "column" is the status column; give "status" only if the cell text is not a plain word like approved/pending/rejected.
+Use "cells" when a metric's value is written in one cell. Look at every metric target and ask whether a column holds it: a "p99 (ms)" column holds a p99 latency, a "Pass rate" column a pass rate, an "Errors" column an error rate. When several rows could hold it, choose the row whose labels best match the metric's meaning (for example "new path", "new gateway" or "new cluster" for a metric about the new system; "Regression" for a regression pass rate). "row" is the row number shown in the sample.
+For a sign-off, "column" is the status column; always give "byColumn" when a column names the approver and "noteColumn" when a column holds a comment, and give "status" only if the cell text is not a plain word like approved/pending/rejected.
 Filter values must be copied exactly from the column values listed.`;
 
 const DOCUMENT_SYSTEM = `You map a document onto a release-readiness checklist.

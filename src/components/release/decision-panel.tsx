@@ -73,7 +73,7 @@ export function DecisionPanel({
   }
 
   return (
-    <section aria-labelledby="decision-heading" className="rounded-lg border bg-sheet">
+    <section aria-labelledby="decision-heading" className="scroll-mt-6 rounded-lg border bg-sheet">
       <div className="border-b px-4 py-3">
         <h2 id="decision-heading" className="text-base font-semibold">
           Decision

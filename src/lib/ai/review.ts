@@ -1,5 +1,6 @@
 import type { AskJson } from "./provider";
 import { evaluateRelease, quoteAppearsIn } from "../readiness/evaluate";
+import { validateBrief } from "../readiness/brief";
 import type {
   DocumentVerdict,
   Evaluation,
@@ -50,46 +51,38 @@ export async function judgeDocumentGate(
   return { gateId: gate.id, status, reason, quote: quote || undefined };
 }
 
-const MEMO_SYSTEM = `You write go/no-go memos for engineering leadership.
-Use only the facts given. Every factual sentence ends with the id of the gate it is about, in square brackets, like [rollback-plan]. Only gate ids from "gates" may appear in brackets; write dates and names as plain text.
-Structure: a one-line recommendation; what is ready; what blocks, in order of risk; advisory items; the path to Go.
-Plain, direct sentences. No headings, no bullet points, no marketing language. Under 220 words.
-Return JSON: {"memo": string}.`;
+const BRIEF_SYSTEM = `You write the decision brief for a release go/no-go meeting.
+Use only the facts given. For every gate whose status is not "pass", write one item:
+- "issue": only the gap, in plain words a release manager understands, under 14 words. The gate's title is shown above it, so never repeat the title; never use the gate id or brackets. Good: "Rehearsal is only scheduled for Nov 10 and has not run." Bad: "Rollback plan is complete and rehearsed has not been rehearsed."
+- "action": the concrete next step that would make it pass, under 16 words, starting with a verb. Base it on the gate's reason and evidence (for example a rehearsal date or a missing owner named in a document).
+Also write "summary": one sentence under 25 words that states the recommendation word exactly as given (Go, Conditional or No-Go) and the main reason.
+Return JSON: {"summary": string, "items": [{"gateId": string, "issue": string, "action": string}]}.`;
 
-export async function draftMemo(
+/** Asks the model for the brief; the result is checked against the gates. */
+export async function draftBrief(
   ask: AskJson,
   release: Release,
   evaluation: Evaluation,
+  documentsRead: number,
 ): Promise<string> {
-  const facts = release.gates.map((gate) => {
+  const label = { go: "Go", conditional: "Conditional", "no-go": "No-Go" }[evaluation.recommendation];
+  const gates = release.gates.map((gate) => {
     const result = evaluation.results.find((r) => r.gateId === gate.id);
     return {
-      id: gate.id,
+      gateId: gate.id,
       title: gate.title,
       blocking: gate.blocking,
+      owner: gate.owner,
       status: result?.status,
       reason: result?.reason,
       evidence: result?.evidence,
     };
   });
   const out = await ask(
-    MEMO_SYSTEM,
-    JSON.stringify({
-      release: release.name,
-      targetDate: release.targetDate,
-      recommendation: evaluation.recommendation,
-      gates: facts,
-    }),
+    BRIEF_SYSTEM,
+    JSON.stringify({ release: release.name, targetDate: release.targetDate, recommendation: label, gates }),
   );
-  return typeof out.memo === "string" ? keepGateCitations(out.memo, release) : "";
-}
-
-/** Drops bracketed tokens that are not gate ids, e.g. a stray "[targetDate]". */
-export function keepGateCitations(memo: string, release: Release): string {
-  const ids = new Set(release.gates.map((g) => g.id));
-  return memo
-    .replace(/\s*\[([^\]\n]{1,60})\]/g, (match, token: string) => (ids.has(token.trim()) ? match : ""))
-    .replace(/ +([.,;:])/g, "$1");
+  return JSON.stringify(validateBrief(out, release, evaluation, "ai", documentsRead));
 }
 
 export interface ReviewProgress {
@@ -118,10 +111,7 @@ export async function runAiReview(
     }),
   );
   onProgress?.({ step: "drafting", done, total: docGates.length });
-  const memo = await draftMemo(
-    ask,
-    release,
-    evaluateRelease(release, verdicts),
-  );
+  const read = docGates.filter((g) => release.signals.documents[g.document.document]).length;
+  const memo = await draftBrief(ask, release, evaluateRelease(release, verdicts), read);
   return { verdicts, memo };
 }
