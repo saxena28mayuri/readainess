@@ -8,8 +8,12 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
+import type * as ai from "../ai.js";
+import type * as decisions from "../decisions.js";
 import type * as evaluations from "../evaluations.js";
 import type * as releases from "../releases.js";
+import type * as workspace from "../workspace.js";
 
 import type {
   ApiFromModules,
@@ -18,8 +22,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
+  ai: typeof ai;
+  decisions: typeof decisions;
   evaluations: typeof evaluations;
   releases: typeof releases;
+  workspace: typeof workspace;
 }>;
 
 /**

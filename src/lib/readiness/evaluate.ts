@@ -19,6 +19,17 @@ function compare(actual: number, op: ComparisonOp, target: number): boolean {
   }
 }
 
+const normalize = (text: string) =>
+  text.replace(/\s+/g, " ").trim().toLowerCase();
+
+/** True when the quote appears in the document, ignoring case and spacing. */
+export function quoteAppearsIn(quote: string, content: string): boolean {
+  const needle = normalize(quote);
+  return needle.length > 0 && normalize(content).includes(needle);
+}
+
+const opSymbol: Record<ComparisonOp, string> = { "<=": "≤", ">=": "≥", "==": "=" };
+
 function formatValue(value: number, unit?: string): string {
   return unit ? `${value}${unit}` : String(value);
 }
@@ -50,8 +61,11 @@ export function evaluateGate(
     return {
       gateId: gate.id,
       status: passed ? "pass" : "fail",
-      reason: `${signal} is ${formatValue(actual, unit)}; required ${op} ${formatValue(target, unit)}.`,
-      evidence: [`metrics.${signal} = ${actual}`],
+      reason:
+        op === "=="
+          ? `Measured ${formatValue(actual, unit)}; must be ${formatValue(target, unit)}.`
+          : `${formatValue(actual, unit)} against a target of ${opSymbol[op]} ${formatValue(target, unit)}.`,
+      evidence: [`${signal} = ${actual}`],
     };
   }
 
@@ -108,6 +122,14 @@ export function evaluateGate(
       evidence: [],
     };
   }
+  if (verdict.quote && !quoteAppearsIn(verdict.quote, doc.content)) {
+    return {
+      gateId: gate.id,
+      status: "unknown",
+      reason: `AI quoted text that does not appear in "${doc.title}".`,
+      evidence: [],
+    };
+  }
   return {
     gateId: gate.id,
     status: verdict.status,
@@ -129,6 +151,24 @@ export function evaluateRelease(
   const byGate = new Map(verdicts.map((v) => [v.gateId, v]));
   const results = release.gates.map((gate) =>
     evaluateGate(gate, release, byGate),
+  );
+  return rollUp(release, results);
+}
+
+/** Applies the roll-up rules to gate results, in the release's gate order. */
+export function rollUp(
+  release: Pick<Release, "gates">,
+  input: GateResult[],
+): Evaluation {
+  const byId = new Map(input.map((r) => [r.gateId, r]));
+  const results = release.gates.map(
+    (gate) =>
+      byId.get(gate.id) ?? {
+        gateId: gate.id,
+        status: "unknown" as const,
+        reason: "Not evaluated.",
+        evidence: [],
+      },
   );
 
   const blockers: string[] = [];

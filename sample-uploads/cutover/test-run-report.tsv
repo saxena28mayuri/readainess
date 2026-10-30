@@ -1,0 +1,5 @@
+Suite	Environment	Total	Passed	Failed	Skipped	Pass rate	Run date
+Smoke	staging-eu	142	142	0	0	100%	2026-11-05
+Regression (full)	staging-eu	2,318	2,293	21	4	98.9%	2026-11-05
+Contract tests	staging-eu	386	379	7	0	98.2%	2026-11-04
+Accessibility	staging-eu	64	61	3	0	95.3%	2026-11-04

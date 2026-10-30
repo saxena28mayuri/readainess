@@ -1,0 +1,12 @@
+From: Priya Nair <priya.nair@example.com>
+To: Search Platform Team
+Date: 4 November 2026 16:12 CET
+Subject: RE: Security review - search EU migration
+
+Hi all,
+
+Thanks for closing out the pen test findings. I re-tested the two medium issues this afternoon and both are fixed. Query logs from the new nodes are now arriving in the SIEM.
+
+Security approves the search service EU migration for the 14 November cutover.
+
+Priya

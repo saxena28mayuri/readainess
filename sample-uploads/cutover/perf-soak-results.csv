@@ -1,0 +1,5 @@
+Scenario,Path,Duration,Requests per second,p50 (ms),p95 (ms),p99 (ms),Errors
+Search queries,Legacy cluster,4h,1850,38,121,262,0.04%
+Search queries,New cluster,4h,1850,31,104,231,0.03%
+Autocomplete,New cluster,4h,4200,12,41,88,0.01%
+Faceted browse,New cluster,4h,620,55,170,244,0.05%
