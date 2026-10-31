@@ -27,7 +27,9 @@ gsap.registerPlugin(useGSAP);
 type Filter = "all" | "exceptions" | "passing";
 
 function tickFor(gate: Gate, result: GateResult): TickKind {
-  if (result.evidence.length === 0) return "none";
+  // Only a passing or failing result earns a tick; a pending sign-off shows
+  // its evidence without one.
+  if (result.evidence.length === 0 || result.status === "unknown") return "none";
   if (gate.kind === "metric") return "computed";
   if (gate.kind === "document") return "quoted";
   return "signed";

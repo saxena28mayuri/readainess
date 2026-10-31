@@ -239,11 +239,9 @@ export default function ImportPage() {
     setBusy("apply");
     setError(null);
     try {
-      const counts = await applyImport({ releaseId: release._id, signals: patch, files: done.map((f) => f.fileName) });
-      setApplied(
-        `Imported ${counts.metrics} metric${counts.metrics === 1 ? "" : "s"}, ${counts.signoffs} sign-off${counts.signoffs === 1 ? "" : "s"} and ${counts.documents} document${counts.documents === 1 ? "" : "s"}.`,
-      );
-      setEntries([]);
+      await applyImport({ releaseId: release._id, signals: patch, files: done.map((f) => f.fileName) });
+      // Back to the release, where the next step is to run the check.
+      router.push(`/releases/${release.slug}`);
     } catch (err) {
       setError(err instanceof Error ? err.message.split("\n")[0].replace(/^.*Uncaught Error: /, "") : "Import failed.");
     } finally {

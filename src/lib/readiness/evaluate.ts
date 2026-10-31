@@ -72,12 +72,23 @@ export function evaluateGate(
   if (gate.kind === "signoff") {
     const { role } = gate.signoff;
     const signoff = signals.signoffs[role];
-    if (!signoff || signoff.status === "pending") {
+    if (!signoff) {
       return {
         gateId: gate.id,
         status: "unknown",
-        reason: `Waiting on ${role} sign-off.`,
+        reason: `No ${role} sign-off recorded yet.`,
         evidence: [],
+      };
+    }
+    if (signoff.status === "pending") {
+      // Pending is evidence of where the sign-off stands, not a pass.
+      const evidence = [`${role}: pending${signoff.by ? ` (${signoff.by})` : ""}`];
+      if (signoff.note) evidence.push(signoff.note);
+      return {
+        gateId: gate.id,
+        status: "unknown",
+        reason: `${role} sign-off is pending${signoff.by ? ` with ${signoff.by}` : ""}.`,
+        evidence,
       };
     }
     const evidence = [
@@ -101,7 +112,7 @@ export function evaluateGate(
     return {
       gateId: gate.id,
       status: "unknown",
-      reason: `Document "${docKey}" was not provided.`,
+      reason: `No ${docKey.replace(/[-_]+/g, " ")} document imported yet.`,
       evidence: [],
     };
   }

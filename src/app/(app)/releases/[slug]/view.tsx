@@ -62,6 +62,8 @@ export default function ReleasePage() {
   ] as const;
   const onFile = evidence.filter(([n]) => n > 0).map(([n, w]) => `${n} ${w}${n === 1 ? "" : "s"}`).join(", ");
   const change = release.lastChange;
+  // Up to date: a recorded check that is newer than the last change.
+  const upToDate = !!view.checkedAt && (!change || view.checkedAt >= change.at);
 
   async function runCheck() {
     if (!release || !signedIn) return;
@@ -147,13 +149,20 @@ export default function ReleasePage() {
             <Upload aria-hidden />
             Import data
           </Link>
-          <Button size="lg" onClick={runCheck} disabled={running || !signedIn} className="px-3.5">
+          <Button
+            size="lg"
+            variant={upToDate ? "outline" : "default"}
+            onClick={runCheck}
+            disabled={running || !signedIn}
+            className="px-3.5"
+            title={upToDate ? "Nothing has changed since the last check" : undefined}
+          >
             {running ? (
               <Loader2 className="animate-spin" aria-hidden />
             ) : (
               <Play aria-hidden />
             )}
-            {running ? (hasKey ? "Reviewing documents and drafting the brief…" : "Running check…") : "Run readiness check"}
+            {running ? (hasKey ? "Reviewing documents and drafting the brief…" : "Running check…") : upToDate ? "Run again" : "Run readiness check"}
           </Button>
           </div>
           <p className="text-xs text-muted-foreground">

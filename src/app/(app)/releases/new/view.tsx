@@ -11,6 +11,7 @@ import { gateKindLabel } from "@/lib/format";
 import { releaseTemplates } from "@/lib/readiness/templates";
 import type { ReleaseType } from "@/lib/readiness/types";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -96,7 +97,7 @@ export default function NewReleasePage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="target-date">Target date</Label>
-            <Input id="target-date" type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="max-w-48" />
+            <DatePicker id="target-date" value={targetDate} onChange={setTargetDate} />
           </div>
 
           <div className="space-y-1.5">

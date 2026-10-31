@@ -108,13 +108,13 @@ export function Memo({
         <Sparkles className="mt-0.5 size-3.5 shrink-0 text-pencil" aria-hidden />
         {ai ? (
           <span>
-            AI read {read} document{read === 1 ? "" : "s"} and suggested the next steps. Numbers and sign-offs were checked by fixed
-            rules, without AI, and so was the recommendation.
+            <b className="font-semibold text-foreground">AI</b> {read > 0 ? `read ${read} document${read === 1 ? "" : "s"} and wrote` : "wrote"} the next
+            steps · <b className="font-semibold text-foreground">Rules</b> decided the recommendation
           </span>
         ) : (
           <span>
-            No AI in this brief: each item is the gate’s result and its standard next step. Run a readiness check with your AI key to
-            have documents reviewed and next steps tailored to them.
+            <b className="font-semibold text-foreground">Rules</b> decided the recommendation and the next steps · add an AI key to have
+            documents read
           </span>
         )}
       </p>

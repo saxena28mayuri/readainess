@@ -17,12 +17,14 @@ interface Step {
   action?: React.ReactNode;
 }
 
-/** Which gates have some evidence on file, by their kind of signal. */
-function gatesWithEvidence(release: Release) {
+/** The gates with no evidence on file yet, by their kind of signal. */
+function gatesWithoutEvidence(release: Release) {
   const s = release.signals;
-  return release.gates.filter((g) =>
-    g.kind === "metric" ? g.metric.signal in s.metrics : g.kind === "signoff" ? g.signoff.role in s.signoffs : g.document.document in s.documents,
-  ).length;
+  return release.gates
+    .map((g, i) => ({ g, n: i + 1 }))
+    .filter(({ g }) =>
+      !(g.kind === "metric" ? g.metric.signal in s.metrics : g.kind === "signoff" ? g.signoff.role in s.signoffs : g.document.document in s.documents),
+    );
 }
 
 /**
@@ -52,7 +54,14 @@ export function NextSteps({
   onRunCheck: () => void;
 }) {
   const total = release.gates.length;
-  const withEvidence = gatesWithEvidence(release);
+  const missing = gatesWithoutEvidence(release);
+  const withEvidence = total - missing.length;
+  const missingText =
+    missing.length === 0
+      ? ""
+      : missing.length <= 2
+        ? `${missing.map((m) => `G${m.n} ${m.g.title}`).join(" and ")} ${missing.length === 1 ? "has" : "have"} none yet; ${missing.length === 1 ? "it" : "they"} will show as Unknown.`
+        : `${missing.length} gates have none yet; they will show as Unknown.`;
   const change = release.lastChange;
   const stale = !!change && !!checkedAt && checkedAt < change.at;
   const decision = decisions?.[0];
@@ -71,14 +80,16 @@ export function NextSteps({
     },
     {
       title: "Bring the evidence",
+      // Partial evidence is enough to run a check: gates without it show as
+      // Unknown, so the next step moves on as soon as anything is imported.
       status:
-        withEvidence === total
-          ? `Every gate has evidence${change?.kind === "import" ? ` · last import ${timeAgo(change.at)}` : ""}`
-          : `${withEvidence} of ${total} gates have evidence${change?.kind === "import" ? ` · last import ${timeAgo(change.at)}: ${change.summary}` : ""}`,
-      state: withEvidence === total ? "done" : "todo",
+        withEvidence === 0
+          ? "No evidence yet. Import exports, sign-off sheets or documents."
+          : `${withEvidence} of ${total} gates have evidence${change?.kind === "import" ? ` · imported ${timeAgo(change.at)}: ${change.summary}` : ""}. ${missingText}`.trim(),
+      state: withEvidence === 0 ? "todo" : "done",
       action: canEdit ? (
-        <Link href={`/releases/${slug}/import`} className={buttonVariants({ variant: withEvidence === total ? "ghost" : "outline", size: "sm" })}>
-          Import data
+        <Link href={`/releases/${slug}/import`} className={buttonVariants({ variant: withEvidence === 0 ? "default" : "ghost", size: "sm" })}>
+          {withEvidence === 0 ? "Import data" : "Import more"}
         </Link>
       ) : undefined,
     },
@@ -90,14 +101,17 @@ export function NextSteps({
           : "Not run yet. Without an AI key, documents are not reviewed."
         : stale
           ? `Out of date: ${change!.kind === "import" ? `${change!.summary} imported` : "checklist edited"} ${timeAgo(change!.at)}, after the last check`
-          : `Up to date · ran ${timeAgo(checkedAt)}`,
+          : `Up to date · ran ${timeAgo(checkedAt)}. Run it again only after importing new data or editing the checklist; the same data gives the same result.`,
       state: !checkedAt ? "todo" : stale ? "attention" : "done",
-      action: (
-        <Button size="sm" variant={!checkedAt || stale ? "default" : "ghost"} onClick={onRunCheck} disabled={running}>
-          {running && <Loader2 className="animate-spin" aria-hidden />}
-          {running ? "Running…" : checkedAt ? "Run again" : "Run check"}
-        </Button>
-      ),
+      // A fresh check on unchanged data repeats the last one, so the button
+      // only appears when there is something new to check.
+      action:
+        !checkedAt || stale ? (
+          <Button size="sm" onClick={onRunCheck} disabled={running}>
+            {running && <Loader2 className="animate-spin" aria-hidden />}
+            {running ? "Running…" : checkedAt ? "Run again" : "Run check"}
+          </Button>
+        ) : undefined,
     },
     {
       title: "Record the decision",
@@ -124,7 +138,9 @@ export function NextSteps({
         <h2 id="steps-heading" className="text-base font-semibold">Next steps</h2>
         <p className="text-xs text-muted-foreground">
           {now === -1 ? "All done for this release." : `Now: ${steps[now].title.toLowerCase()}`}
-          {change?.files && change.files.length > 0 && <> · last files: {change.files.join(", ")}</>}
+          {change?.files && change.files.length > 0 && (
+            <span title={change.files.join("\n")}> · last import: {change.files.length} file{change.files.length === 1 ? "" : "s"}</span>
+          )}
         </p>
       </div>
       <ol className="grid divide-y divide-rule md:grid-cols-4 md:divide-x md:divide-y-0">
