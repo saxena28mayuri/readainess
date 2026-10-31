@@ -43,3 +43,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# design review captures
+/.impeccable/review
+.clerk/
+
+# Clerk CLI login (kept per project)
+/.clerk-home
+
+# design inspection captures
+/.taste-skill
+/.impeccable/hook.cache.json
+/.impeccable/questions
+/.impeccable/mocks

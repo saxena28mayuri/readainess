@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-30T00:00:00Z",
+  "title": "Design System: ReadAIness",
+  "extensions": {
+    "colorMeta": {
+      "rail": {
+        "role": "primary",
+        "displayName": "Binder Green",
+        "canonical": "oklch(32.7% 0.051 175)",
+        "tonalRamp": [
+          "oklch(15% 0.051 175)",
+          "oklch(25% 0.051 175)",
+          "oklch(35% 0.051 175)",
+          "oklch(45% 0.051 175)",
+          "oklch(58% 0.051 175)",
+          "oklch(72% 0.051 175)",
+          "oklch(85% 0.051 175)",
+          "oklch(95% 0.031 175)"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Binder Green (action)",
+        "canonical": "oklch(32.7% 0.051 175)",
+        "tonalRamp": [
+          "oklch(15% 0.051 175)",
+          "oklch(25% 0.051 175)",
+          "oklch(35% 0.051 175)",
+          "oklch(45% 0.051 175)",
+          "oklch(58% 0.051 175)",
+          "oklch(72% 0.051 175)",
+          "oklch(85% 0.051 175)",
+          "oklch(95% 0.031 175)"
+        ]
+      },
+      "pencil": {
+        "role": "secondary",
+        "displayName": "Auditor's Pencil",
+        "canonical": "oklch(46.5% 0.204 267)",
+        "tonalRamp": [
+          "oklch(15% 0.204 267)",
+          "oklch(25% 0.204 267)",
+          "oklch(35% 0.204 267)",
+          "oklch(45% 0.204 267)",
+          "oklch(58% 0.204 267)",
+          "oklch(72% 0.204 267)",
+          "oklch(85% 0.204 267)",
+          "oklch(95% 0.122 267)"
+        ]
+      },
+      "go": {
+        "role": "tertiary",
+        "displayName": "Go Green",
+        "canonical": "oklch(49.0% 0.105 159)",
+        "tonalRamp": [
+          "oklch(15% 0.105 159)",
+          "oklch(25% 0.105 159)",
+          "oklch(35% 0.105 159)",
+          "oklch(45% 0.105 159)",
+          "oklch(58% 0.105 159)",
+          "oklch(72% 0.105 159)",
+          "oklch(85% 0.105 159)",
+          "oklch(95% 0.063 159)"
+        ]
+      },
+      "cond": {
+        "role": "tertiary",
+        "displayName": "Conditional Amber",
+        "canonical": "oklch(50.8% 0.105 72)",
+        "tonalRamp": [
+          "oklch(15% 0.105 72)",
+          "oklch(25% 0.105 72)",
+          "oklch(35% 0.105 72)",
+          "oklch(45% 0.105 72)",
+          "oklch(58% 0.105 72)",
+          "oklch(72% 0.105 72)",
+          "oklch(85% 0.105 72)",
+          "oklch(95% 0.063 72)"
+        ]
+      },
+      "nogo": {
+        "role": "tertiary",
+        "displayName": "No-Go Red",
+        "canonical": "oklch(51.1% 0.170 31)",
+        "tonalRamp": [
+          "oklch(15% 0.170 31)",
+          "oklch(25% 0.170 31)",
+          "oklch(35% 0.170 31)",
+          "oklch(45% 0.170 31)",
+          "oklch(58% 0.170 31)",
+          "oklch(72% 0.170 31)",
+          "oklch(85% 0.170 31)",
+          "oklch(95% 0.102 31)"
+        ]
+      },
+      "unknown": {
+        "role": "tertiary",
+        "displayName": "Unknown Slate",
+        "canonical": "oklch(50.9% 0.021 166)",
+        "tonalRamp": [
+          "oklch(15% 0.021 166)",
+          "oklch(25% 0.021 166)",
+          "oklch(35% 0.021 166)",
+          "oklch(45% 0.021 166)",
+          "oklch(58% 0.021 166)",
+          "oklch(72% 0.021 166)",
+          "oklch(85% 0.021 166)",
+          "oklch(95% 0.013 166)"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Working Ground",
+        "canonical": "oklch(94.4% 0.007 160)",
+        "tonalRamp": [
+          "oklch(15% 0.012 160)",
+          "oklch(25% 0.012 160)",
+          "oklch(35% 0.012 160)",
+          "oklch(45% 0.012 160)",
+          "oklch(58% 0.012 160)",
+          "oklch(72% 0.012 160)",
+          "oklch(85% 0.012 160)",
+          "oklch(95% 0.007 160)"
+        ]
+      },
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Sheet White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.000 160)",
+          "oklch(25% 0.000 160)",
+          "oklch(35% 0.000 160)",
+          "oklch(45% 0.000 160)",
+          "oklch(58% 0.000 160)",
+          "oklch(72% 0.000 160)",
+          "oklch(85% 0.000 160)",
+          "oklch(95% 0.000 160)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(23.3% 0.023 166)",
+        "tonalRamp": [
+          "oklch(15% 0.023 166)",
+          "oklch(25% 0.023 166)",
+          "oklch(35% 0.023 166)",
+          "oklch(45% 0.023 166)",
+          "oklch(58% 0.023 166)",
+          "oklch(72% 0.023 166)",
+          "oklch(85% 0.023 166)",
+          "oklch(95% 0.014 166)"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "oklch(47.5% 0.026 164)",
+        "tonalRamp": [
+          "oklch(15% 0.026 164)",
+          "oklch(25% 0.026 164)",
+          "oklch(35% 0.026 164)",
+          "oklch(45% 0.026 164)",
+          "oklch(58% 0.026 164)",
+          "oklch(72% 0.026 164)",
+          "oklch(85% 0.026 164)",
+          "oklch(95% 0.016 164)"
+        ]
+      },
+      "rail-raised": {
+        "role": "primary",
+        "displayName": "Rail Raised"
+      },
+      "rail-foreground": {
+        "role": "primary",
+        "displayName": "Rail Foreground"
+      },
+      "rail-muted": {
+        "role": "primary",
+        "displayName": "Rail Muted"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border"
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline Rule"
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Input Stroke"
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Secondary Fill"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Fill"
+      },
+      "pencil-soft": {
+        "role": "secondary",
+        "displayName": "Pencil Soft"
+      },
+      "go-soft": {
+        "role": "tertiary",
+        "displayName": "Go Tint"
+      },
+      "cond-soft": {
+        "role": "tertiary",
+        "displayName": "Conditional Tint"
+      },
+      "nogo-soft": {
+        "role": "tertiary",
+        "displayName": "No-Go Tint"
+      },
+      "unknown-soft": {
+        "role": "tertiary",
+        "displayName": "Unknown Tint"
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "Primary Foreground"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Recommendation word in the opinion block only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings on sheets."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Findings, memo, summaries; 60-70ch."
+      },
+      "body-dense": {
+        "displayName": "Body dense",
+        "purpose": "Table furniture, verdict tags, rail links."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Column heads, legend, metadata; sentence case."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Evidence figures, counts, rules, dates, model names, keys; tabular."
+      },
+      "gate-id": {
+        "displayName": "Gate ID",
+        "purpose": "G-numbers in pencil blue, gate column and citations."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet-lift",
+        "value": "0 1px 2px rgba(19,33,27,0.05)",
+        "purpose": "Gate table and releases table only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "tickmark-strike",
+        "value": "stroke-dashoffset 1 -> 0, 0.45s expo.out, stagger 0.07s, delay 0.1s (GSAP)",
+        "purpose": "Draws non-empty tickmarks down the evidence column when a new check lands; no-preference only."
+      },
+      {
+        "name": "status-settle",
+        "value": "opacity 0.25 -> 1, 0.4s expo.out, stagger 0.07s",
+        "purpose": "Status cells settle alongside the strike."
+      },
+      {
+        "name": "citation-fade",
+        "value": "background-color 700ms",
+        "purpose": "Pencil-soft row highlight fades after a memo citation."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation/transition-duration 0.01ms under prefers-reduced-motion: reduce",
+        "purpose": "Global; GSAP strike is skipped entirely."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "memo-column",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Binder-green primary action; one per view (Run readiness check, Record decision, Save key).",
+      "html": "<button class=\"ds-btn-primary\">Record decision</button>",
+      "css": ".ds-btn-primary{height:32px;padding:0 10px;border:1px solid transparent;border-radius:6px;background:var(--primary);color:var(--primary-foreground);font:500 14px/1 var(--font-geist-sans),sans-serif;cursor:pointer;transition:background .15s,transform .15s}.ds-btn-primary:hover{background:color-mix(in srgb,var(--primary) 80%,transparent)}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action on sheets (Test key, Run readiness check in an empty decision panel).",
+      "html": "<button class=\"ds-btn-outline\">Test key</button>",
+      "css": ".ds-btn-outline{height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--background);color:var(--foreground);font:500 14px/1 var(--font-geist-sans),sans-serif;cursor:pointer;transition:background .15s}.ds-btn-outline:hover{background:var(--muted)}.ds-btn-outline:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Hairline field with pencil caret and pencil focus ring; mono for keys and model names.",
+      "html": "<label class=\"ds-field\"><span>Decided by</span><input class=\"ds-input\" placeholder=\"Name and role\"></label>",
+      "css": ".ds-field{display:grid;gap:6px;font:500 14px/1.4 var(--font-geist-sans),sans-serif;color:var(--foreground)}.ds-input{height:32px;padding:4px 10px;border:1px solid var(--input);border-radius:6px;background:var(--sheet);color:var(--foreground);font:400 14px var(--font-geist-sans),sans-serif;caret-color:var(--pencil);outline:none;transition:border-color .15s,box-shadow .15s}.ds-input::placeholder{color:var(--muted-foreground)}.ds-input:focus-visible{border-color:var(--pencil);box-shadow:0 0 0 3px color-mix(in srgb,var(--pencil) 50%,transparent)}"
+    },
+    {
+      "name": "Rail Navigation",
+      "kind": "nav",
+      "refersTo": "rail-link",
+      "description": "Green binder rail; release links lead with their current recommendation mark.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-rail-link\" aria-current=\"page\" href=\"#\"><span class=\"ds-rail-mark\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#8a5a0c\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/></svg></span>Checkout v3</a><a class=\"ds-rail-link\" href=\"#\"><span class=\"ds-rail-mark\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#b3311f\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586z\"/><path d=\"m15 9-6 6\"/><path d=\"m9 9 6 6\"/></svg></span>Payments migration</a></nav>",
+      "css": ".ds-rail{display:grid;gap:2px;width:232px;padding:12px;background:var(--rail)}.ds-rail-link{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:4px;color:var(--rail-muted);font:400 13px/20px var(--font-geist-sans),sans-serif;text-decoration:none;transition:background .15s,color .15s}.ds-rail-link:hover,.ds-rail-link[aria-current=page]{background:var(--rail-raised);color:var(--rail-foreground)}.ds-rail-link:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}.ds-rail-mark{display:flex;width:16px;height:16px;align-items:center;justify-content:center;border-radius:3px;background:var(--sheet)}.ds-rail-mark svg{width:12px;height:12px}"
+    },
+    {
+      "name": "Tickmark Legend",
+      "kind": "custom",
+      "description": "Authored blue-pencil tickmarks keyed to a printed legend; dotted circle means no evidence.",
+      "html": "<div class=\"ds-legend\"><b>Tickmarks</b><span><svg viewBox=\"0 0 20 20\"><path d=\"M2.6 10.8c1.3.9 2.5 2.2 3.6 4 2.6-4.6 6.2-8.6 11.3-12.1\"/></svg>Agreed to source data</span><span><svg viewBox=\"0 0 20 20\"><path d=\"M2.4 9.6c1.2.8 2.3 2 3.3 3.6 2.3-4 5.4-7.4 9.6-10.4\"/><path d=\"M16.9 14.9c0 1.6-1.1 2.8-2.5 2.8s-2.4-1.1-2.4-2.6c0-1.6 1.2-2.8 2.6-2.8 1.3 0 2.3 1.1 2.3 2.4\"/></svg>Traced to document</span><span><svg viewBox=\"0 0 20 20\"><path d=\"M2.6 8.6c1.2.8 2.3 2 3.3 3.6 2.3-4 5.4-7.4 9.6-10.4\"/><path d=\"M2.4 16.6c4.6-.6 9.6-.9 15.2-.4\"/></svg>Signed off</span><span class=\"ds-none\"><svg viewBox=\"0 0 20 20\"><path d=\"M10 4.6c3.2 0 5.5 2.4 5.5 5.4s-2.4 5.5-5.6 5.5c-3.1 0-5.4-2.5-5.4-5.4 0-3.1 2.4-5.4 5.3-5.3\" stroke-dasharray=\"1.4 1\"/></svg>No evidence</span></div>",
+      "css": ".ds-legend{display:flex;flex-wrap:wrap;gap:8px 24px;font:400 12px/16px var(--font-geist-sans),sans-serif;color:var(--muted-foreground)}.ds-legend b{font-weight:500;color:var(--foreground)}.ds-legend span{display:inline-flex;align-items:center;gap:6px}.ds-legend svg{width:14px;height:14px;fill:none;stroke:var(--pencil);stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}.ds-legend .ds-none svg{stroke:var(--unknown)}"
+    },
+    {
+      "name": "Gate Result Mark",
+      "kind": "chip",
+      "description": "Result word led by an 8px square; filled for Pass/Fail, outlined for Unknown. Never a checkmark.",
+      "html": "<div class=\"ds-marks\"><span class=\"ds-mark ds-pass\"><i></i>Pass</span><span class=\"ds-mark ds-fail\"><i></i>Fail</span><span class=\"ds-mark ds-unknown\"><i></i>Unknown</span></div>",
+      "css": ".ds-marks{display:flex;gap:20px}.ds-mark{display:inline-flex;align-items:center;gap:6px;font:600 13px/20px var(--font-geist-sans),sans-serif}.ds-mark i{width:8px;height:8px;border-radius:1px}.ds-pass{color:var(--go)}.ds-pass i{background:var(--go)}.ds-fail{color:var(--nogo)}.ds-fail i{background:var(--nogo)}.ds-unknown{color:var(--unknown)}.ds-unknown i{border:1px solid currentColor}"
+    },
+    {
+      "name": "Opinion Block",
+      "kind": "card",
+      "refersTo": "sheet",
+      "description": "The recommendation as an opinion: verdict word at display size, one-sentence rationale, ruled mono figures, 3px verdict top rule.",
+      "html": "<section class=\"ds-opinion\"><div><p class=\"ds-rec\">No-Go</p><p class=\"ds-why\">2 blocking gates failed and 1 more is waiting on evidence.</p></div><dl><div><dt>Gates passing</dt><dd>5 of 9</dd></div><div><dt>Blocking exceptions</dt><dd>3</dd></div><div><dt>Advisory exceptions</dt><dd>1</dd></div></dl></section>",
+      "css": ".ds-opinion{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 32px;padding:16px 20px;background:var(--sheet);border:1px solid var(--border);border-top:3px solid var(--nogo);border-radius:4px;font-family:var(--font-geist-sans),sans-serif;color:var(--foreground)}.ds-rec{margin:0;font-size:30px;line-height:1;font-weight:600;letter-spacing:-.025em;color:var(--nogo)}.ds-why{margin:12px 0 0;max-width:60ch;font-size:15px;line-height:24px}.ds-opinion dl{margin:0;min-width:224px;font-size:14px}.ds-opinion dl div{display:flex;justify-content:space-between;gap:24px;padding:6px 0;border-bottom:1px solid var(--rule)}.ds-opinion dl div:last-child{border:0}.ds-opinion dt{color:var(--muted-foreground)}.ds-opinion dd{margin:0;font:500 14px var(--font-geist-mono),monospace;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "History Strip",
+      "kind": "custom",
+      "refersTo": "history-cell",
+      "description": "Checks side by side at one fixed scale; superseded columns fade and their verdict is struck.",
+      "html": "<ol class=\"ds-history\"><li><div><i class=\"f\"></i><i class=\"f\"></i><i class=\"u\"></i><i class=\"p\"></i></div><s>No-Go</s><small>2d ago</small></li><li class=\"latest\"><div><i class=\"p\"></i><i class=\"f\"></i><i class=\"p\"></i><i class=\"p\"></i></div><b>No-Go</b><small>1h ago</small></li></ol>",
+      "css": ".ds-history{display:flex;align-items:flex-end;gap:12px;margin:0;padding:12px 16px;list-style:none;background:var(--sheet);border:1px solid var(--border);border-radius:6px;font:600 11px var(--font-geist-sans),sans-serif}.ds-history li{display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 6px;border-radius:4px}.ds-history li.latest{background:var(--muted)}.ds-history div{display:flex;flex-direction:column;gap:3px;opacity:.45}.ds-history .latest div{opacity:1}.ds-history i{display:block;width:24px;height:8px;border-radius:1px}.ds-history .p{background:var(--go)}.ds-history .f{background:var(--nogo)}.ds-history .u{background:#b6c2bc}.ds-history s{color:var(--unknown)}.ds-history b{color:var(--nogo)}.ds-history small{font-weight:400;color:var(--muted-foreground);font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Memo Citation",
+      "kind": "chip",
+      "refersTo": "citation-chip",
+      "description": "Inline G-number citation in the memo; jumps to and highlights the gate row.",
+      "html": "<p class=\"ds-memo\">Rollback is untested <button class=\"ds-cite\">G4</button> and error budget is spent <button class=\"ds-cite\">G2</button>.</p>",
+      "css": ".ds-memo{font:400 14px/24px var(--font-geist-sans),sans-serif;color:var(--foreground)}.ds-cite{display:inline-flex;align-items:center;height:18px;margin:0 2px;padding:0 4px;border:0;border-radius:3px;background:var(--pencil-soft);color:var(--pencil);font:500 11px var(--font-geist-mono),monospace;cursor:pointer;vertical-align:1px}.ds-cite:hover{background:var(--pencil);color:#fff}.ds-cite:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Audit Working Paper",
+    "overview": "Readiness is reviewed the way an auditor signs off. The recommendation reads as an opinion (Go, Conditional, No-Go), every figure is tickmarked back to its source in blue pencil, and every superseded call stays on file, struck through rather than erased. The working paper sits in a deep green binder rail on a cool green-grey ground; the sheets are white with hairline rules.\n\nDensity is high and calm: a dense gate table is the centre of gravity, set in a sans for reading and a tabular mono for anything a reviewer might tick against a source. Colour is scarce by rule. Green is the binder and the primary action, blue is the auditor's hand, and red, amber and green-for-Go appear only where they carry a verdict. The system is light only: it is used in readiness reviews on shared screens under office light.",
+    "keyCharacteristics": [
+      "Green rail and primary action; cool green-grey ground; white sheets with 1px hairline rules.",
+      "Blue-pencil tickmarks as authored SVG strokes, always keyed to a printed legend.",
+      "Verdict colours reserved for Go / Conditional / No-Go / Unknown, each with a soft tint.",
+      "Geist Sans for language, Geist Mono with tabular numerals for data, figures and gate IDs.",
+      "Superseded checks, recommendations and overridden calls stay visible, struck through.",
+      "One signature motion: tickmarks strike down the evidence column when a new check lands."
+    ],
+    "rules": [
+      {
+        "name": "The Verdict-Only Rule",
+        "body": "Go, Conditional, No-Go and Unknown colours appear only where they carry a verdict or state outcome. Never use them for decoration, category or emphasis.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Hand Rule",
+        "body": "Pencil blue is the auditor's hand: tickmarks, gate IDs, citations, links, focus. It is never a fill for buttons or panels.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ledger Rule",
+        "body": "Mono is for data only: figures, counts, gate IDs, evidence lines, rules, model names and keys. Sentences, labels and headings are always sans. Every number a reviewer compares uses tabular numerals.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper-On-Desk Rule",
+        "body": "Sheets are separated from the ground by tone and border. No floating cards, no hover lifts, no layered shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do key every verified figure to a blue-pencil tickmark and keep the legend on screen beneath the table.",
+      "Do strike through superseded checks, recommendations and overridden calls in unknown slate; never remove them.",
+      "Do set every comparable figure in Geist Mono with tabular numerals.",
+      "Do keep the gate table's six furniture columns fixed across releases, and keep history at one scale.",
+      "Do always state a verdict as a word; colour and icon only support it."
+    ],
+    "donts": [
+      "Don't use Go, Conditional, No-Go or Unknown colours outside a verdict or state outcome.",
+      "Don't draw checkmarks for gate results; the result mark is a square.",
+      "Don't fill buttons or panels with pencil blue.",
+      "Don't add a dark theme; the paper is light only for shared screens under office light.",
+      "Don't lift sheets with shadows beyond the single sheet-lift hairline, or float cards on hover.",
+      "Don't add decorative motion beyond the tickmark strike."
+    ]
+  }
+}

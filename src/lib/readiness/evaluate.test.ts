@@ -44,6 +44,18 @@ describe("document gates", () => {
     expect(result?.status).toBe("unknown");
   });
 
+  it("do not trust a quote that is not in the document", () => {
+    const result = evaluateRelease(apiGatewayCutover, [
+      {
+        gateId: "rollback-plan",
+        status: "pass",
+        reason: "Rehearsed.",
+        quote: "Rollback rehearsed successfully on Oct 28.",
+      },
+    ]).results.find((r) => r.gateId === "rollback-plan");
+    expect(result?.status).toBe("unknown");
+  });
+
   it("use the AI verdict and quote when given", () => {
     const result = evaluateRelease(apiGatewayCutover, [
       {

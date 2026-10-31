@@ -228,4 +228,87 @@ APAC hours (03:00-07:00 CET): primary P. Sharma, secondary P. Sharma's backup to
   },
 };
 
-export const sampleReleases: Release[] = [apiGatewayCutover, peakReadiness];
+export const paymentsSdkUpgrade: Release = {
+  slug: "payments-sdk-upgrade",
+  name: "Payments SDK 4.2 Upgrade",
+  type: "standard",
+  targetDate: "2026-11-06",
+  summary:
+    "Upgrade the payments SDK on web and mobile checkout to 4.2 for the new card-network tokenization rules.",
+  gates: [
+    {
+      id: "sev-bugs",
+      title: "No open Sev1/Sev2 bugs",
+      category: "quality",
+      owner: "QA Lead",
+      blocking: true,
+      kind: "metric",
+      metric: { signal: "openSev1Sev2", op: "==", target: 0 },
+    },
+    {
+      id: "test-pass",
+      title: "Payment regression pass rate",
+      category: "quality",
+      owner: "QA Lead",
+      blocking: true,
+      kind: "metric",
+      metric: { signal: "regressionPassRate", op: ">=", target: 99, unit: "%" },
+    },
+    {
+      id: "auth-rate",
+      title: "Card authorization rate in canary",
+      category: "performance",
+      owner: "Payments Eng",
+      blocking: true,
+      kind: "metric",
+      metric: { signal: "canaryAuthRatePct", op: ">=", target: 96.5, unit: "%" },
+    },
+    {
+      id: "release-notes",
+      title: "Support playbook covers new decline codes",
+      category: "operations",
+      owner: "Support Ops",
+      blocking: false,
+      kind: "document",
+      document: {
+        document: "playbook",
+        question:
+          "Does the support playbook explain how agents should handle each new decline code introduced in SDK 4.2?",
+      },
+    },
+    {
+      id: "security-signoff",
+      title: "Security sign-off",
+      category: "signoff",
+      owner: "Security",
+      blocking: true,
+      kind: "signoff",
+      signoff: { role: "Security" },
+    },
+  ],
+  signals: {
+    metrics: {
+      openSev1Sev2: 0,
+      regressionPassRate: 99.6,
+      canaryAuthRatePct: 97.2,
+    },
+    signoffs: {
+      Security: { status: "approved", by: "R. Iyer", note: "PCI scope unchanged." },
+    },
+    documents: {
+      playbook: {
+        title: "Checkout support playbook (draft)",
+        content: `New in SDK 4.2: decline codes 54 (expired token), 57 (network tokenization unavailable) and 61 (issuer step-up required).
+Code 54: ask the customer to re-enter their card; the token refreshes automatically.
+Code 61: guide the customer through their bank's verification prompt.
+Code 57: section to be written.`,
+      },
+    },
+  },
+};
+
+export const sampleReleases: Release[] = [
+  apiGatewayCutover,
+  peakReadiness,
+  paymentsSdkUpgrade,
+];

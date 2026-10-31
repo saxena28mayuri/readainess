@@ -1,0 +1,7 @@
+#peak-readiness, Thursday 12 November 2026
+
+Marta Kowalski (SRE lead), 10:42
+Reviewed the load test results and the rota. Capacity looks good. SRE sign-off is approved for the holiday peak, on the condition that the TaxMate limit is confirmed before Friday.
+
+Jonas Berg, 10:44
+Thanks Marta, chasing TaxMate today.

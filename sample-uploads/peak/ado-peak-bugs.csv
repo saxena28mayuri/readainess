@@ -1,0 +1,8 @@
+ID,Work Item Type,Title,State,Priority,Area Path,Assigned To
+48211,Bug,Checkout times out when basket has more than 40 items,Active,1,Commerce\Checkout,N. Patel
+48219,Bug,Gift card balance call retried without backoff,Resolved,2,Commerce\Payments,E. Rossi
+48223,Bug,Promo banner overlaps size picker on small screens,New,3,Commerce\Storefront,C. Dubois
+48230,Bug,Inventory sync lags 5 minutes under load,Closed,2,Commerce\Inventory,H. Yamada
+48234,User Story,Queue page for flash sale entry,Active,2,Commerce\Storefront,C. Dubois
+48237,Bug,Order confirmation email delayed up to 20 minutes,Closed,2,Commerce\Notifications,E. Rossi
+48240,Bug,Wishlist count wrong after merge of guest cart,New,4,Commerce\Storefront,N. Patel

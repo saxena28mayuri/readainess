@@ -1,0 +1,5 @@
+Function,Approver,Decision,Date,Comment
+Security,Priya Nair,Approved,2026-11-04,Pen test findings closed; logging to SIEM verified
+Product Owner,Daniel Weber,Pending,,Waiting on the diacritics fix (SRCH-1182)
+Data Protection,Sofia Marin,Approved,2026-11-02,DPIA updated for EU hosting
+Customer Support,Lena Hoffmann,Approved,2026-11-03,Macros updated

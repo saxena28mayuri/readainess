@@ -1,8 +1,8 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-// Mirrors src/lib/readiness/types.ts. API keys are never stored here:
-// LLM calls run in the browser with the user's own key.
+// Mirrors src/lib/readiness/types.ts. Users' AI keys are stored only as
+// AES-GCM ciphertext (aiKeys) and decrypted inside Convex actions.
 
 const gateBase = {
   id: v.string(),
@@ -88,11 +88,31 @@ export default defineSchema({
     gates: v.array(gate),
     signals,
     isSample: v.boolean(),
-  }).index("by_slug", ["slug"]),
+    // "org:<id>" or "user:<id>" from the Clerk session: only that workspace
+    // can see and edit the release. Samples have none and are read-only.
+    workspaceId: v.optional(v.string()),
+    copiedFrom: v.optional(v.string()),
+    // The latest change to the release's data or checklist, so the release
+    // page can say when a shown check is out of date.
+    lastChange: v.optional(
+      v.object({
+        at: v.number(),
+        kind: v.union(v.literal("import"), v.literal("checklist")),
+        summary: v.string(),
+        files: v.optional(v.array(v.string())),
+      }),
+    ),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_workspace", ["workspaceId"]),
 
   // One row per readiness check, so readiness can be shown as a trend.
+  // Each workspace sees only its own checks and decisions.
   evaluations: defineTable({
     releaseId: v.id("releases"),
+    workspaceId: v.string(),
+    // Clerk user id of whoever ran the check.
+    checkedBy: v.optional(v.string()),
     recommendation,
     results: v.array(
       v.object({
@@ -104,15 +124,50 @@ export default defineSchema({
     ),
     memo: v.optional(v.string()),
     model: v.optional(v.string()),
-  }).index("by_release", ["releaseId"]),
+  })
+    .index("by_release_workspace", ["releaseId", "workspaceId"])
+    .index("by_workspace", ["workspaceId"]),
 
   // The human decision. Overrides of the recommendation must give a reason.
+  // Decisions are never edited or deleted; a newer one supersedes the last.
   decisions: defineTable({
     releaseId: v.id("releases"),
+    workspaceId: v.string(),
     evaluationId: v.id("evaluations"),
     decision: recommendation,
+    // The recommendation on file when the decision was made.
+    recommended: v.optional(recommendation),
     decidedBy: v.string(),
+    decidedById: v.optional(v.string()),
     reason: v.string(),
     overrode: v.boolean(),
-  }).index("by_release", ["releaseId"]),
+  }).index("by_release_workspace", ["releaseId", "workspaceId"]),
+
+  // One AI key per user, encrypted with AI_KEY_SECRET (bound to the user id).
+  // The plaintext key never leaves Convex actions.
+  aiKeys: defineTable({
+    userId: v.string(),
+    provider: v.union(v.literal("gemini"), v.literal("openai")),
+    model: v.string(),
+    ciphertext: v.string(),
+    iv: v.string(),
+    last4: v.string(),
+  }).index("by_user", ["userId"]),
+
+  // Metadata about every AI call. Never prompts, files or answers.
+  aiLogs: defineTable({
+    userId: v.string(),
+    workspaceId: v.string(),
+    releaseId: v.optional(v.id("releases")),
+    task: v.union(v.literal("import"), v.literal("review"), v.literal("key-test"), v.literal("models")),
+    provider: v.union(v.literal("gemini"), v.literal("openai")),
+    model: v.string(),
+    ok: v.boolean(),
+    error: v.optional(v.string()),
+    latencyMs: v.number(),
+    inputTokens: v.optional(v.number()),
+    outputTokens: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_workspace", ["workspaceId"]),
 });

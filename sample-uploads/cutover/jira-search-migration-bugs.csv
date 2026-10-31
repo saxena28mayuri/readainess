@@ -1,0 +1,13 @@
+Key,Summary,Issue Type,Status,Severity,Fix Version,Assignee,Updated
+SRCH-1182,Search results empty for queries with diacritics on new cluster,Bug,In Progress,Sev 1 - Critical,EU-Migration-1,A. Lindqvist,2026-11-03
+SRCH-1190,Facet counts off by one after reindex,Bug,In Review,Sev 2 - Major,EU-Migration-1,K. Moreau,2026-11-04
+SRCH-1174,Autocomplete latency spike during shard rebalance,Bug,Done,Sev 2 - Major,EU-Migration-1,T. Okonkwo,2026-10-29
+SRCH-1169,Synonym file not loaded on two replicas,Bug,Closed,Sev 1 - Critical,EU-Migration-1,A. Lindqvist,2026-10-27
+SRCH-1195,Typo in maintenance banner copy,Bug,To Do,Sev 4 - Trivial,EU-Migration-1,J. Ferreira,2026-11-04
+SRCH-1197,Sort by price ignores currency on DE storefront,Bug,To Do,Sev 3 - Minor,EU-Migration-1,K. Moreau,2026-11-05
+SRCH-1201,Dashboards for new cluster missing p99 panel,Task,To Do,Sev 3 - Minor,EU-Migration-1,T. Okonkwo,2026-11-05
+SRCH-1188,Query logs not shipped to SIEM from new nodes,Bug,Done,Sev 2 - Major,EU-Migration-1,R. Haddad,2026-11-01
+SRCH-1203,Feature flag for dual-write cleanup,Story,In Progress,Sev 3 - Minor,EU-Migration-1,J. Ferreira,2026-11-05
+SRCH-1185,Stale cache serves old prices for 90s after cutover rehearsal,Bug,Won't Fix,Sev 2 - Major,EU-Migration-1,R. Haddad,2026-10-31
+SRCH-1199,Pagination returns duplicates beyond page 40,Bug,Backlog,Sev 3 - Minor,EU-Migration-2,K. Moreau,2026-11-05
+SRCH-1176,Health check flaps when node count changes,Bug,Resolved,Sev 1 - Critical,EU-Migration-1,T. Okonkwo,2026-10-30
