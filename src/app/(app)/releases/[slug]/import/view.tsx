@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { errorText, useAiKey } from "@/lib/settings";
 import { useReleaseDetail } from "@/lib/use-checks";
 import { signalsTemplate } from "@/lib/import/parse";
+import { detectDelimiter, looksTabular } from "@/lib/import/csv";
 import { uploadKind } from "@/lib/ai/structure";
 import {
   MAX_DOCUMENT,
@@ -37,6 +38,9 @@ import {
 import type { Release, Signals } from "@/lib/readiness/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { PushHint } from "@/components/release/push-hint";
+import { DataOnFile } from "@/components/release/data-on-file";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Entry = {
   id: string;
@@ -57,6 +61,7 @@ const SAMPLE_JIRA = [
 ].join("\n");
 
 const MAX_FILE = 2_000_000;
+const NO_SLOT = "__none";
 
 /* ---------- consent, remembered per browser ---------- */
 
@@ -210,7 +215,9 @@ export default function ImportPage() {
 
   function addPaste() {
     if (!pasteText.trim() || !ready) return;
-    addEntries([{ name: `Pasted text ${entries.length + 1}.txt`, text: pasteText }]);
+    // A pasted table is read as a table, not as prose.
+    const ext = looksTabular(pasteText) ? (detectDelimiter(pasteText) === "\t" ? "tsv" : "csv") : "txt";
+    addEntries([{ name: `Pasted text ${entries.length + 1}.${ext}`, text: pasteText }]);
     setPasteText("");
     setApplied(null);
   }
@@ -396,7 +403,7 @@ export default function ImportPage() {
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
                 rows={6}
-                placeholder="Paste a rollback plan, runbook or approval email"
+                placeholder="Paste a rollback plan, runbook, approval email or a table copied from a spreadsheet"
                 aria-label="Document text"
                 maxLength={MAX_DOCUMENT}
                 disabled={!ready}
@@ -446,6 +453,10 @@ export default function ImportPage() {
               </Button>
             </div>
           </section>
+
+          <DataOnFile release={release} releaseId={release._id} meta={release.signalMeta} canEdit={editable} />
+
+          {editable && <PushHint release={release} />}
 
           <section aria-labelledby="templates-heading" className="rounded-lg border bg-sheet px-4 py-3">
             <h2 id="templates-heading" className="text-sm font-semibold">Example files</h2>
@@ -508,15 +519,19 @@ function FileRow({
               {entry.kind === "document" && documents.length > 0 && (
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                   <label htmlFor={`slot-${entry.id}`} className="text-muted-foreground">Evidence for</label>
-                  <select
-                    id={`slot-${entry.id}`}
-                    value={docItem?.key ?? ""}
-                    onChange={(e) => onMove(e.target.value || null)}
-                    className="h-7 rounded-md border border-input bg-sheet px-2"
+                  <Select
+                    value={docItem?.key ?? NO_SLOT}
+                    onValueChange={(v) => onMove(!v || v === NO_SLOT ? null : v)}
+                    items={[{ value: NO_SLOT, label: "No check (values only)" }, ...documents.map((d) => ({ value: d.key, label: d.title }))]}
                   >
-                    <option value="">No check (values only)</option>
-                    {documents.map((d) => <option key={d.key} value={d.key}>{d.title}</option>)}
-                  </select>
+                    <SelectTrigger id={`slot-${entry.id}`} size="sm" className="min-w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_SLOT}>No check (values only)</SelectItem>
+                      {documents.map((d) => <SelectItem key={d.key} value={d.key}>{d.title}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
               {values.length > 0 && (

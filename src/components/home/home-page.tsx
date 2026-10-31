@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import { Show } from "@clerk/nextjs";
+import { AuthControls, Mark } from "@/components/marketing/site-header";
+import { SiteFooter } from "@/components/marketing/site-footer";
 import { cn } from "@/lib/utils";
 import { demoFiles } from "@/lib/landing/demo";
 import { HeroWindow } from "@/components/home/hero-window";
@@ -66,15 +67,6 @@ const dataRows: { what: string; how: string; status: string }[] = [
   { what: "Uploaded files, prompts and answers", how: "Passed to your AI provider to be read, then dropped", status: "Not kept" },
 ];
 
-function Mark() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-      <rect width="24" height="24" rx="6" fill="#1638b8" />
-      <path d="M6.2 12.6c1.1.8 2.1 1.9 3 3.4 2.2-3.9 5-7.2 8.6-10" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 const h2 = "text-[clamp(2rem,1.4rem+2.4vw,3.5rem)] leading-[1.02] font-semibold tracking-[-0.03em] text-balance";
 const section = "mx-auto max-w-[1280px] scroll-mt-6 px-[var(--m)] pt-[clamp(96px,12vw,176px)]";
 
@@ -98,13 +90,7 @@ export function HomePage() {
             <a href="#security" className="transition-colors hover:text-[#0b1220]">Security</a>
           </nav>
           <div className="flex items-center gap-3 text-[15px]">
-            <Show when="signed-out">
-              <Link href="/sign-in" className="hidden font-medium text-[#3d4456] hover:text-[#0b1220] sm:inline">Sign in</Link>
-              <Link href="/sign-up" className="rounded-lg bg-[#1638b8] px-4 py-2 font-medium text-white transition-colors hover:bg-[#102b92] active:scale-[.98]">Start free</Link>
-            </Show>
-            <Show when="signed-in">
-              <Link href="/releases" className="rounded-lg bg-[#1638b8] px-4 py-2 font-medium text-white transition-colors hover:bg-[#102b92]">Open your releases</Link>
-            </Show>
+            <AuthControls cta="Start free" />
           </div>
         </header>
 
@@ -316,21 +302,7 @@ export function HomePage() {
           </section>
         </main>
 
-        <footer className="mx-auto max-w-[1280px] px-[var(--m)] pt-[clamp(64px,8vw,112px)] pb-10">
-          <div className="flex flex-wrap items-end justify-between gap-8">
-            <div>
-              <p className="flex items-center gap-2.5 text-[17px] font-semibold tracking-tight"><Mark /> ReadAIness</p>
-              <p className="mt-2 text-[15px] text-[#3d4456]">Evidence-backed go/no-go decisions for every release.</p>
-            </div>
-            <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-[#3d4456]">
-              <Link href="/privacy" className="hover:text-[#0b1220]">Privacy</Link>
-              <Link href="/terms" className="hover:text-[#0b1220]">Terms</Link>
-              <a href="https://github.com/saxena28mayuri" target="_blank" rel="noreferrer" className="hover:text-[#0b1220]">GitHub</a>
-              <a href="https://www.linkedin.com/in/saxena-mayuri/" target="_blank" rel="noreferrer" className="hover:text-[#0b1220]">LinkedIn</a>
-            </nav>
-          </div>
-          <p className="mt-10 text-[14px] text-[#525a6b]">© 2026 · Built by Mayuri Saxena · Sample releases and figures are synthetic.</p>
-        </footer>
+        <SiteFooter />
       </div>
     </MotionConfig>
   );

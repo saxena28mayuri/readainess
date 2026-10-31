@@ -10,11 +10,45 @@ const links = [
   { href: "/#trust", label: "Privacy & security" },
 ];
 
+export function Mark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={cn("size-6", className)} aria-hidden>
+      <rect width="24" height="24" rx="6" fill="#1638b8" />
+      <path d="M6.2 12.6c1.1.8 2.1 1.9 3 3.4 2.2-3.9 5-7.2 8.6-10" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <Link href="/" className={cn("text-[17px] font-semibold tracking-tight", className)}>
-      Read<span className="text-pencil">AI</span>ness
+    <Link href="/" className={cn("flex items-center gap-2.5 text-[17px] font-semibold tracking-tight", className)}>
+      <Mark />
+      <span>
+        Read<span className="text-pencil">AI</span>ness
+      </span>
     </Link>
+  );
+}
+
+/** Sign-in links when signed out; the app link and the signed-in person when signed in. */
+export function AuthControls({ cta = "Get started" }: { cta?: string }) {
+  return (
+    <>
+      <Show when="signed-out">
+        <Link href="/sign-in" className="hidden font-medium text-muted-foreground hover:text-foreground sm:inline">
+          Sign in
+        </Link>
+        <Link href="/sign-up" className="rounded-md bg-primary px-3.5 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+          {cta}
+        </Link>
+      </Show>
+      <Show when="signed-in">
+        <Link href="/releases" className="rounded-md bg-primary px-3.5 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+          Open app
+        </Link>
+        <UserButton />
+      </Show>
+    </>
   );
 }
 
@@ -31,20 +65,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-3 text-sm">
-          <Show when="signed-out">
-            <Link href="/sign-in" className="hidden font-medium text-muted-foreground hover:text-foreground sm:inline">
-              Sign in
-            </Link>
-            <Link href="/sign-up" className="rounded-md bg-primary px-3.5 py-2 font-medium text-primary-foreground transition-colors hover:bg-rail-raised">
-              Get started
-            </Link>
-          </Show>
-          <Show when="signed-in">
-            <Link href="/releases" className="rounded-md bg-primary px-3.5 py-2 font-medium text-primary-foreground transition-colors hover:bg-rail-raised">
-              Open app
-            </Link>
-            <UserButton />
-          </Show>
+          <AuthControls />
         </div>
       </div>
     </header>

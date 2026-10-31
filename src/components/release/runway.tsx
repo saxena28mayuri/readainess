@@ -13,7 +13,12 @@ const textTone: Record<Recommendation, string> = { go: "text-go", conditional: "
  * The runway: each release on one axis from today to its target date,
  * marked with its current call, so the No-Go due soonest is seen first.
  */
-export function Runway({ items }: { items: { release: Release & { slug: string }; view: CheckView }[] }) {
+export function Runway({
+  items,
+}: {
+  /** call: the person's decision when there is one; otherwise the tool's recommendation is shown. */
+  items: { release: Release & { slug: string }; view: CheckView; call?: Recommendation }[];
+}) {
   const rows = items
     .map((i) => ({ ...i, days: daysUntil(i.release.targetDate) }))
     .sort((a, b) => a.days - b.days);
@@ -42,8 +47,8 @@ export function Runway({ items }: { items: { release: Release & { slug: string }
               </span>
             ))}
           </div>
-          {rows.map(({ release, view, days }) => {
-            const rec = view.evaluation.recommendation;
+          {rows.map(({ release, view, days, call }) => {
+            const rec = call ?? view.evaluation.recommendation;
             return (
               <div key={release.slug} className="contents">
                 <div className="min-w-0 py-2.5">

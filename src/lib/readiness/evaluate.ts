@@ -198,6 +198,16 @@ export function rollUp(
     }
   });
 
+  // A release with no gates has nothing to pass, which is not a Go.
+  if (release.gates.length === 0) {
+    return {
+      recommendation: "conditional",
+      results,
+      blockers: ["No checklist yet: add the gates this release must meet."],
+      warnings,
+    };
+  }
+
   let recommendation: Recommendation = "go";
   if (hasBlockingFail) recommendation = "no-go";
   else if (blockers.length > 0 || warnings.length > 0)

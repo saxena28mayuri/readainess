@@ -8,27 +8,27 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { api } from "../../../../../convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { gateKindLabel } from "@/lib/format";
-import { releaseTemplates } from "@/lib/readiness/templates";
+import { releaseKinds, releaseTemplates } from "@/lib/readiness/templates";
+import { useReleases } from "@/lib/use-checks";
 import type { ReleaseType } from "@/lib/readiness/types";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const types: { value: ReleaseType; label: string; hint: string }[] = [
-  { value: "cutover", label: "Cutover or migration", hint: "Moving traffic or data to a new system." },
-  { value: "peak", label: "Peak event", hint: "Getting ready for a traffic spike such as a sale." },
-  { value: "standard", label: "Standard release", hint: "A regular feature or dependency release." },
-];
+const EMPTY = "__empty";
 
 export default function NewReleasePage() {
   const router = useRouter();
   const create = useMutation(api.releases.create);
+  const { releases } = useReleases();
   const [name, setName] = useState("");
   const [type, setType] = useState<ReleaseType>("cutover");
   const [targetDate, setTargetDate] = useState("");
   const [summary, setSummary] = useState("");
+  const [copyFrom, setCopyFrom] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -39,15 +39,22 @@ export default function NewReleasePage() {
     setError(null);
     setSaving(true);
     try {
-      const slug = await create({ name, type, targetDate, summary });
-      router.push(`/releases/${slug}/import`);
+      const copyGatesFrom = type === "custom" && copyFrom !== EMPTY ? copyFrom : undefined;
+      const slug = await create({ name, type, targetDate, summary, copyGatesFrom });
+      // A blank checklist has nothing to import against yet, so write it first.
+      router.push(type === "custom" && !copyGatesFrom ? `/releases/${slug}/gates` : `/releases/${slug}/import`);
     } catch (err) {
       setError(err instanceof Error ? err.message.split("\n")[0].replace(/^.*Uncaught Error: /, "") : "Could not create the release.");
       setSaving(false);
     }
   }
 
-  const gates = releaseTemplates[type];
+  const source = type === "custom" && copyFrom !== EMPTY ? releases?.find((r) => r.slug === copyFrom) : undefined;
+  const gates = source?.gates ?? releaseTemplates[type];
+  const copyOptions = [
+    { value: EMPTY, label: "Start with no gates" },
+    ...(releases ?? []).map((r) => ({ value: r.slug, label: `${r.name} (${r.gates.length} gates)` })),
+  ];
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-8 lg:py-8">
@@ -56,8 +63,8 @@ export default function NewReleasePage() {
       </Link>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">New release</h1>
       <p className="mt-1.5 max-w-[70ch] text-sm leading-6 text-muted-foreground">
-        Pick the kind of release to start from a standard readiness checklist.
-        Next you will import the data each check needs.
+        Start from a standard readiness checklist, copy one from another release, or write your own.
+        Every checklist can be edited afterwards. Next you will import the data each check needs.
       </p>
 
       <form onSubmit={submit} noValidate className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -68,9 +75,9 @@ export default function NewReleasePage() {
           </div>
 
           <fieldset>
-            <legend className="text-sm font-medium">Kind of release</legend>
-            <div className="mt-2 grid gap-2 sm:grid-cols-3">
-              {types.map((t) => (
+            <legend className="text-sm font-medium">Starting checklist</legend>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {releaseKinds.map((t) => (
                 <label
                   key={t.value}
                   className={cn(
@@ -93,6 +100,22 @@ export default function NewReleasePage() {
                 </label>
               ))}
             </div>
+            {type === "custom" && (
+              <div className="mt-3 space-y-1.5">
+                <Label htmlFor="copy-from">Copy gates from</Label>
+                <Select value={copyFrom} onValueChange={(v) => setCopyFrom(v ?? EMPTY)} items={copyOptions}>
+                  <SelectTrigger id="copy-from" className="w-full max-w-md">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {copyOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Only the gates are copied, never the imported data.</p>
+              </div>
+            )}
           </fieldset>
 
           <div className="space-y-1.5">
@@ -111,14 +134,14 @@ export default function NewReleasePage() {
 
           <Button type="submit" disabled={saving}>
             {saving && <Loader2 className="animate-spin" aria-hidden />}
-            Create and import data
+            {type === "custom" && !source ? "Create and write checklist" : "Create and import data"}
           </Button>
         </div>
 
         <aside className="rounded-lg border bg-sheet">
           <div className="border-b px-4 py-3">
             <h2 className="text-sm font-semibold">Starting checklist</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">{gates.length} gates, all Unknown until data arrives.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{gates.length === 0 ? "No gates yet. You will add them next." : `${gates.length} gates, all Unknown until data arrives.`}</p>
           </div>
           <ol className="divide-y divide-rule">
             {gates.map((g, i) => (

@@ -14,9 +14,14 @@ import { RecommendationTag } from "@/components/verdict";
 import { Runway } from "@/components/release/runway";
 
 export default function ReleasesPage() {
-  const { releases, latest } = useReleases();
-  const views = (releases ?? []).map((r) => ({ release: r, view: currentView(r, latest?.[r._id]) }));
-  const noGo = views.filter((v) => v.view.evaluation.recommendation === "no-go").length;
+  const { releases, latest, decisions } = useReleases();
+  // The person's decision is the release's call; the tool's recommendation is advice.
+  const views = (releases ?? []).map((r) => ({
+    release: r,
+    view: currentView(r, latest?.[r._id]),
+    call: decisions?.[r._id]?.decision,
+  }));
+  const noGo = views.filter((v) => (v.call ?? v.view.evaluation.recommendation) === "no-go").length;
   const next = [...views].sort((a, b) => a.release.targetDate.localeCompare(b.release.targetDate))[0];
   const finding =
     releases === undefined
@@ -46,6 +51,7 @@ export default function ReleasesPage() {
             <tr className="border-b text-xs text-muted-foreground">
               <th scope="col" className="px-4 py-2.5 font-medium">Release</th>
               <th scope="col" className="px-4 py-2.5 font-medium">Recommendation</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Decision</th>
               <th scope="col" className="px-4 py-2.5 font-medium">Target date</th>
               <th scope="col" className="px-4 py-2.5 text-right font-medium">Blockers</th>
               <th scope="col" className="px-4 py-2.5 text-right font-medium">Gates passing</th>
@@ -57,7 +63,7 @@ export default function ReleasesPage() {
             {releases === undefined
               ? [0, 1, 2].map((i) => (
                   <tr key={i} className="border-b border-rule last:border-0 max-md:block">
-                    <td colSpan={7} className="px-4 py-4 max-md:block">
+                    <td colSpan={8} className="px-4 py-4 max-md:block">
                       <div className="h-4 w-1/2 rounded bg-muted" />
                     </td>
                   </tr>
@@ -65,6 +71,9 @@ export default function ReleasesPage() {
               : releases.map((release) => {
                   const view = currentView(release, latest?.[release._id]);
                   const { evaluation } = view;
+                  const decision = decisions?.[release._id];
+                  // A decision made on an older check no longer matches what the gates say now.
+                  const decidedOnEarlier = !!decision && !!view.evaluationId && decision.evaluationId !== view.evaluationId;
                   const passing = evaluation.results.filter(
                     (r) => r.status === "pass",
                   ).length;
@@ -92,6 +101,20 @@ export default function ReleasesPage() {
                       </td>
                       <td className="px-4 py-3.5 max-md:p-0 max-md:text-right">
                         <RecommendationTag value={evaluation.recommendation} />
+                      </td>
+                      <td className="px-4 py-3.5 max-md:col-span-2 max-md:p-0">
+                        {decision ? (
+                          <>
+                            <RecommendationTag value={decision.decision} />
+                            <div className="mt-0.5 text-xs text-muted-foreground">
+                              {decision.decidedBy} · {timeAgo(decision._creationTime)}
+                              {decision.overrode && <span className="font-medium text-cond"> · Override</span>}
+                              {decidedOnEarlier && " · before the latest check"}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-[13px] text-muted-foreground">Not decided</span>
+                        )}
                       </td>
                       <td className="px-4 py-3.5 tabular max-md:col-span-2 max-md:p-0 max-md:text-[13px]">
                         {formatDate(release.targetDate)}

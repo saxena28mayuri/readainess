@@ -109,7 +109,11 @@ export function useReleases() {
     api.evaluations.latestForWorkspace,
     ready && isAuthenticated ? {} : "skip",
   );
-  return { releases, latest, signedIn: isAuthenticated };
+  const decisions = useQuery(
+    api.decisions.latestForWorkspace,
+    ready && isAuthenticated ? {} : "skip",
+  );
+  return { releases, latest, decisions, signedIn: isAuthenticated };
 }
 
 export function useReleaseDetail(slug: string) {

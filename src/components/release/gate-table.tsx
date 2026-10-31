@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { gateKindLabel } from "@/lib/format";
 import type { Gate, GateResult, Release } from "@/lib/readiness/types";
 import { GateStatusMark } from "@/components/verdict";
+import { SignoffControls } from "@/components/release/signoff-controls";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 /**
  * Display-only tidy-up for quotes taken from Markdown tables: "| a | b |"
@@ -49,8 +51,11 @@ export function GateTable({
   results,
   animationKey,
   highlight,
+  signoffFor,
 }: {
   release: Release;
+  /** Set when the viewer can edit this release, which enables in-app sign-off. */
+  signoffFor?: Id<"releases">;
   results: GateResult[];
   /** Changes when a new check lands; replays the tickmark strike. */
   animationKey: string;
@@ -316,6 +321,9 @@ export function GateTable({
                           <dt className="text-muted-foreground">Category</dt>
                           <dd className="capitalize">{gate.category}</dd>
                         </dl>
+                        {gate.kind === "signoff" && signoffFor && (
+                          <SignoffControls releaseId={signoffFor} release={release} role={gate.signoff.role} />
+                        )}
                       </td>
                     </tr>
                   )}

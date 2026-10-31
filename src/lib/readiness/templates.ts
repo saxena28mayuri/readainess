@@ -43,7 +43,16 @@ const productSignoff: Gate = {
   signoff: { role: "Product Owner" },
 };
 
+/** The starting points offered on the New release page. Add a kind here and in ReleaseType. */
+export const releaseKinds: { value: ReleaseType; label: string; hint: string }[] = [
+  { value: "cutover", label: "Cutover or migration", hint: "Moving traffic or data to a new system." },
+  { value: "peak", label: "Peak event", hint: "Getting ready for a traffic spike such as a sale." },
+  { value: "standard", label: "Standard release", hint: "A regular feature or dependency release." },
+  { value: "custom", label: "Blank checklist", hint: "Write your own gates, or copy them from another release." },
+];
+
 export const releaseTemplates: Record<ReleaseType, Gate[]> = {
+  custom: [],
   cutover: [
     sevBugs,
     regression,

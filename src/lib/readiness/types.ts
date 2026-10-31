@@ -1,7 +1,7 @@
 // Shared readiness types. Used by the browser, Convex functions and tests,
 // so this folder must stay free of React, Next.js and Convex imports.
 
-export type ReleaseType = "cutover" | "peak" | "standard";
+export type ReleaseType = "cutover" | "peak" | "standard" | "custom";
 
 export type GateCategory =
   | "quality"
@@ -63,6 +63,9 @@ export interface Signals {
   signoffs: Record<string, Signoff>;
   documents: Record<string, SourceDocument>;
 }
+
+/** When a value on file arrived, and from which files. Keyed "metric:<key>", "signoff:<role>" or "document:<key>". */
+export type SignalMeta = Record<string, { at: number; source?: string }>;
 
 export interface Release {
   slug: string;

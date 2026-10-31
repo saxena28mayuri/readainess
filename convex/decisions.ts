@@ -24,6 +24,23 @@ export const list = query({
   },
 });
 
+/** The latest decision per release, for the releases list. */
+export const latestForWorkspace = query({
+  args: {},
+  handler: async (ctx) => {
+    const workspace = await getWorkspace(ctx);
+    if (!workspace) return {};
+    const rows = await ctx.db
+      .query("decisions")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", workspace.id))
+      .order("desc")
+      .take(200);
+    const latest: Record<string, (typeof rows)[number]> = {};
+    for (const row of rows) latest[row.releaseId] ??= row;
+    return latest;
+  },
+});
+
 export const record = mutation({
   args: {
     releaseId: v.id("releases"),
