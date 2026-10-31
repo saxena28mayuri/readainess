@@ -9,6 +9,7 @@ export const releaseTypeLabel: Record<ReleaseType, string> = {
   cutover: "Cutover",
   peak: "Peak event",
   standard: "Standard release",
+  custom: "Custom checklist",
 };
 
 export const recommendationLabel: Record<Recommendation, string> = {

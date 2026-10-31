@@ -4,23 +4,9 @@ import { internalMutation, mutation, query, type MutationCtx } from "./_generate
 import { getWorkspace, requireWorkspace } from "./workspace";
 import { sampleReleases } from "../src/lib/readiness/samples";
 import { releaseTemplates } from "../src/lib/readiness/templates";
-import { gate as gateValidator, signals as signalsValidator } from "./schema";
+import { gate as gateValidator, releaseType, signals as signalsValidator } from "./schema";
+import { LIMITS, describeSignals, mergeSignals, stampMeta } from "../src/lib/readiness/merge";
 
-const releaseType = v.union(
-  v.literal("cutover"),
-  v.literal("peak"),
-  v.literal("standard"),
-);
-
-const LIMITS = {
-  name: 120,
-  summary: 600,
-  key: 80,
-  document: 20_000,
-  documents: 30,
-  metrics: 60,
-  signoffs: 30,
-};
 
 /** Samples plus the releases the current workspace created or copied. */
 export const list = query({
@@ -81,13 +67,17 @@ async function ownedRelease(
   return release;
 }
 
-/** Creates an empty release from the checklist template for its type. */
+/**
+ * Creates a release with no data yet. Its checklist comes from the template
+ * for its type, or is copied from another release's gates (never its data).
+ */
 export const create = mutation({
   args: {
     name: v.string(),
     type: releaseType,
     targetDate: v.string(),
     summary: v.string(),
+    copyGatesFrom: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const workspace = await requireWorkspace(ctx);
@@ -96,6 +86,17 @@ export const create = mutation({
     if (!/^\d{4}-\d{2}-\d{2}$/.test(args.targetDate)) {
       throw new Error("Choose a target date");
     }
+    let gates = releaseTemplates[args.type];
+    if (args.copyGatesFrom) {
+      const source = await ctx.db
+        .query("releases")
+        .withIndex("by_slug", (q) => q.eq("slug", args.copyGatesFrom!))
+        .unique();
+      if (!source || (!source.isSample && source.workspaceId !== workspace.id)) {
+        throw new Error("Release to copy from not found");
+      }
+      gates = source.gates;
+    }
     const slug = slugify(name);
     await ctx.db.insert("releases", {
       slug,
@@ -103,7 +104,7 @@ export const create = mutation({
       type: args.type,
       targetDate: args.targetDate,
       summary: args.summary.trim().slice(0, LIMITS.summary),
-      gates: releaseTemplates[args.type],
+      gates,
       signals: { metrics: {}, signoffs: {}, documents: {} },
       isSample: false,
       workspaceId: workspace.id,
@@ -133,6 +134,7 @@ export const duplicate = mutation({
       summary: source.summary,
       gates: source.gates,
       signals: source.signals,
+      signalMeta: source.signalMeta,
       isSample: false,
       workspaceId: workspace.id,
       copiedFrom: source.copiedFrom ?? source.slug,
@@ -155,59 +157,99 @@ export const applyImport = mutation({
     const workspace = await requireWorkspace(ctx);
     const release = await ownedRelease(ctx, releaseId, workspace.id);
 
-    const metrics = { ...release.signals.metrics };
-    for (const [key, value] of Object.entries(signals.metrics)) {
-      if (key.length > LIMITS.key || !Number.isFinite(value)) {
-        throw new Error(`Invalid metric "${key.slice(0, 40)}"`);
-      }
-      metrics[key] = value;
-    }
-    const signoffs = { ...release.signals.signoffs };
-    for (const [role, signoff] of Object.entries(signals.signoffs)) {
-      if (role.length > LIMITS.key) throw new Error("Sign-off role is too long");
-      signoffs[role] = {
-        status: signoff.status,
-        by: signoff.by?.slice(0, 80),
-        note: signoff.note?.slice(0, 300),
-      };
-    }
-    const documents = { ...release.signals.documents };
-    for (const [key, doc] of Object.entries(signals.documents)) {
-      if (key.length > LIMITS.key) throw new Error("Document key is too long");
-      documents[key] = {
-        title: doc.title.slice(0, 160),
-        content: doc.content.slice(0, LIMITS.document),
-      };
-    }
-    if (
-      Object.keys(metrics).length > LIMITS.metrics ||
-      Object.keys(signoffs).length > LIMITS.signoffs ||
-      Object.keys(documents).length > LIMITS.documents
-    ) {
-      throw new Error("Too many signals on one release");
-    }
-
-    const counts = {
-      metrics: Object.keys(signals.metrics).length,
-      signoffs: Object.keys(signals.signoffs).length,
-      documents: Object.keys(signals.documents).length,
-    };
-    const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
-    const summary = [
-      counts.metrics && plural(counts.metrics, "metric"),
-      counts.signoffs && plural(counts.signoffs, "sign-off"),
-      counts.documents && plural(counts.documents, "document"),
-    ].filter(Boolean).join(", ");
+    const merged = mergeSignals(release.signals, signals);
+    const { counts, summary } = describeSignals(signals);
+    const at = Date.now();
+    const source = files?.slice(0, 5).map((f) => f.slice(0, 80)).join(", ") || undefined;
     await ctx.db.patch(release._id, {
-      signals: { metrics, signoffs, documents },
+      signals: merged,
+      signalMeta: stampMeta(release.signalMeta, signals, at, source),
       lastChange: {
-        at: Date.now(),
+        at,
         kind: "import",
-        summary: summary || "no values",
+        summary,
         files: files?.slice(0, 20).map((f) => f.slice(0, 160)),
       },
     });
     return counts;
+  },
+});
+
+/**
+ * Records a sign-in-app approval, rejection or reset for a role on this
+ * release. Only roles a gate asks for can be signed, and every change is kept
+ * in the sign-off log with who made it.
+ */
+export const recordSignoff = mutation({
+  args: {
+    releaseId: v.id("releases"),
+    role: v.string(),
+    status: v.union(v.literal("approved"), v.literal("pending"), v.literal("rejected")),
+    note: v.optional(v.string()),
+    byName: v.optional(v.string()),
+  },
+  handler: async (ctx, { releaseId, role, status, note, byName }) => {
+    const workspace = await requireWorkspace(ctx);
+    const release = await ownedRelease(ctx, releaseId, workspace.id);
+    if (!release.gates.some((g) => g.kind === "signoff" && g.signoff.role === role)) {
+      throw new Error(`No gate asks for a "${role.slice(0, 40)}" sign-off`);
+    }
+    const by = (byName?.trim() || "Team member").slice(0, 80);
+    const text = note?.trim().slice(0, 300) || undefined;
+    if (status === "rejected" && !text) throw new Error("Say why you are rejecting, so the team can act on it");
+    const at = Date.now();
+    await ctx.db.insert("signoffEvents", { releaseId, workspaceId: workspace.id, role, status, by, byId: workspace.userId, note: text });
+    await ctx.db.patch(release._id, {
+      signals: { ...release.signals, signoffs: { ...release.signals.signoffs, [role]: { status, by, note: text } } },
+      signalMeta: { ...release.signalMeta, [`signoff:${role}`]: { at, source: `Signed in ReadAIness by ${by}` } },
+      lastChange: { at, kind: "signoff", summary: `${role} ${status}` },
+    });
+  },
+});
+
+/** The sign-off log for one release, newest first. */
+export const signoffLog = query({
+  args: { releaseId: v.id("releases") },
+  handler: async (ctx, { releaseId }) => {
+    const workspace = await getWorkspace(ctx);
+    if (!workspace) return [];
+    const rows = await ctx.db
+      .query("signoffEvents")
+      .withIndex("by_release_workspace", (q) => q.eq("releaseId", releaseId).eq("workspaceId", workspace.id))
+      .order("desc")
+      .take(30);
+    return rows.map((r) => ({ id: r._id, at: r._creationTime, role: r.role, status: r.status, by: r.by, note: r.note }));
+  },
+});
+
+/**
+ * Removes one imported value, for example after its gate was renamed or
+ * dropped. The gate that used it reads Unknown again until re-imported.
+ */
+export const removeSignal = mutation({
+  args: {
+    releaseId: v.id("releases"),
+    group: v.union(v.literal("metric"), v.literal("signoff"), v.literal("document")),
+    key: v.string(),
+  },
+  handler: async (ctx, { releaseId, group, key }) => {
+    const workspace = await requireWorkspace(ctx);
+    const release = await ownedRelease(ctx, releaseId, workspace.id);
+    const signals = {
+      metrics: { ...release.signals.metrics },
+      signoffs: { ...release.signals.signoffs },
+      documents: { ...release.signals.documents },
+    };
+    const bucket = group === "metric" ? signals.metrics : group === "signoff" ? signals.signoffs : signals.documents;
+    if (!(key in bucket)) throw new Error("That value is not on file");
+    delete (bucket as Record<string, unknown>)[key];
+    const signalMeta = { ...release.signalMeta };
+    delete signalMeta[`${group}:${key}`];
+    await ctx.db.patch(release._id, {
+      signals,
+      signalMeta,
+      lastChange: { at: Date.now(), kind: "import", summary: `removed ${group} "${key.slice(0, 40)}"` },
+    });
   },
 });
 
@@ -266,7 +308,11 @@ export const remove = mutation({
       .query("decisions")
       .withIndex("by_release_workspace", (q) => q.eq("releaseId", releaseId).eq("workspaceId", workspace.id))
       .collect();
-    for (const row of [...decisions, ...evaluations]) await ctx.db.delete(row._id);
+    const signoffs = await ctx.db
+      .query("signoffEvents")
+      .withIndex("by_release_workspace", (q) => q.eq("releaseId", releaseId).eq("workspaceId", workspace.id))
+      .collect();
+    for (const row of [...decisions, ...evaluations, ...signoffs]) await ctx.db.delete(row._id);
     await ctx.db.delete(release._id);
     return { evaluations: evaluations.length, decisions: decisions.length };
   },

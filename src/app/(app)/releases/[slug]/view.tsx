@@ -118,7 +118,7 @@ export default function ReleasePage() {
             {change && (
               <>
                 <span aria-hidden>·</span>
-                <span>{change.kind === "import" ? "Last import" : "Checklist edited"} {timeAgo(change.at)}</span>
+                <span>{change.kind === "import" ? "Last import" : change.kind === "signoff" ? "Last sign-off" : "Checklist edited"} {timeAgo(change.at)}</span>
               </>
             )}
           </p>
@@ -211,6 +211,7 @@ export default function ReleasePage() {
             results={view.evaluation.results}
             animationKey={view.evaluationId ?? "sample"}
             highlight={highlight}
+            signoffFor={release.canEdit ? release._id : undefined}
           />
           {history && <HistoryStrip release={release} history={history} />}
         </div>

@@ -43,7 +43,7 @@ export function NextSteps({
   running,
   onRunCheck,
 }: {
-  release: Release & { lastChange?: { at: number; kind: "import" | "checklist"; summary: string; files?: string[] } };
+  release: Release & { lastChange?: { at: number; kind: "import" | "checklist" | "signoff"; summary: string; files?: string[] } };
   slug: string;
   canEdit: boolean;
   checkedAt?: number;
@@ -100,7 +100,7 @@ export function NextSteps({
           ? "Not run yet. AI reads the documents and drafts the brief; rules check the rest."
           : "Not run yet. Without an AI key, documents are not reviewed."
         : stale
-          ? `Out of date: ${change!.kind === "import" ? `${change!.summary} imported` : "checklist edited"} ${timeAgo(change!.at)}, after the last check`
+          ? `Out of date: ${change!.kind === "import" ? `${change!.summary} imported` : change!.kind === "signoff" ? change!.summary : "checklist edited"} ${timeAgo(change!.at)}, after the last check`
           : `Up to date · ran ${timeAgo(checkedAt)}. Run it again only after importing new data or editing the checklist; the same data gives the same result.`,
       state: !checkedAt ? "todo" : stale ? "attention" : "done",
       // A fresh check on unchanged data repeats the last one, so the button

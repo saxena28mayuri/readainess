@@ -99,3 +99,12 @@ describe("recommendation", () => {
     expect(blockers.some((b) => b.startsWith("Partner API consumers"))).toBe(false);
   });
 });
+
+describe("a release with no gates", () => {
+  it("is never a Go", () => {
+    const empty: Release = { ...apiGatewayCutover, gates: [] };
+    const result = evaluateRelease(empty);
+    expect(result.recommendation).toBe("conditional");
+    expect(result.blockers[0]).toMatch(/no checklist/i);
+  });
+});

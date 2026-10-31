@@ -30,7 +30,6 @@ export function SiteFooter() {
           ·{" "}
           <a href="https://www.linkedin.com/in/saxena-mayuri/" target="_blank" rel="noreferrer" className="underline decoration-current/40 hover:decoration-current">LinkedIn</a>
         </p>
-        <p>Sample releases, people and figures shown on this site are synthetic.</p>
       </div>
     </footer>
   );

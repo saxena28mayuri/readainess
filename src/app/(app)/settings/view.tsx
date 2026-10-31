@@ -11,6 +11,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ApiTokens } from "@/components/settings/api-tokens";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const DEFAULT_MODEL = "__default";
 
 type Status = { kind: "idle" } | { kind: "busy"; label: string } | { kind: "ok"; label: string } | { kind: "error"; message: string };
 
@@ -159,16 +163,18 @@ export default function SettingsPage() {
           {savedForThisProvider && provider === "gemini" && models && models.length > 0 && (
             <div className="space-y-1.5">
               <Label htmlFor="model-select">Model</Label>
-              <select
-                id="model-select"
-                value={models.includes(saved.model) ? saved.model : ""}
-                onChange={(e) => void chooseModel(e.target.value || info.defaultModel)}
+              <Select
+                value={models.includes(saved.model) ? saved.model : DEFAULT_MODEL}
+                onValueChange={(v) => void chooseModel(!v || v === DEFAULT_MODEL ? info.defaultModel : v)}
+                items={[{ value: DEFAULT_MODEL, label: `${info.defaultModel} (recommended)` }, ...models.map((m) => ({ value: m, label: m }))]}
                 disabled={status.kind === "busy"}
-                className="h-8 w-full max-w-sm rounded-md border border-input bg-sheet px-2 font-mono text-[13px]"
               >
-                <option value="">{info.defaultModel} (recommended)</option>
-                {models.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
+                <SelectTrigger id="model-select" size="sm" className="w-full max-w-sm font-mono text-[13px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={DEFAULT_MODEL}>{info.defaultModel} (recommended)</SelectItem>
+                  {models.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           )}
           {savedForThisProvider && provider === "openai" && (
@@ -241,6 +247,8 @@ export default function SettingsPage() {
           </form>
         </div>
       </section>
+
+      <ApiTokens />
 
       <section aria-labelledby="logs-heading" className="mt-6 rounded-lg border bg-sheet">
         <div className="border-b px-5 py-3">

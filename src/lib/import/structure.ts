@@ -107,12 +107,36 @@ export function profileTable(table: Table, sampleRows = 25) {
 
 const norm = (s: string) => s.trim().toLowerCase();
 
-/** Parses a cell like "312 ms", "0.4%", "1,204" or "3.2x" without guessing. */
+const NUMBER_CELL = /^([-+]?(?:\d{1,3}(?:,\d{3})+|\d+)?(?:\.\d+)?)\s*(%|ms|s|x|rps|req\/s)?$/i;
+
+function readCell(raw: string): { n: number; unit?: string } | null {
+  const m = raw.trim().match(NUMBER_CELL);
+  if (!m || !/\d/.test(m[1])) return null;
+  const n = Number(m[1].replace(/,/g, ""));
+  return Number.isFinite(n) ? { n, unit: m[2]?.toLowerCase() } : null;
+}
+
+/**
+ * Parses a cell like "312 ms", "0.4%", "1,204" or "3.2x" without guessing.
+ * Commas count only as thousands separators, so "1,5" is refused, not read as 15.
+ */
 export function parseNumberCell(raw: string): number | null {
-  const m = raw.trim().replace(/,/g, "").match(/^([-+]?\d*\.?\d+)\s*(%|ms|s|x|rps|req\/s)?$/i);
-  if (!m) return null;
-  const n = Number(m[1]);
-  return Number.isFinite(n) ? n : null;
+  return readCell(raw)?.n ?? null;
+}
+
+/**
+ * Like parseNumberCell, but in the gate's unit: "1.2 s" is 1200 for a
+ * millisecond gate, and a unit that cannot be compared (a % for a latency)
+ * is refused rather than passed through as a bare number.
+ */
+export function parseMeasured(raw: string, targetUnit?: string): number | null {
+  const cell = readCell(raw);
+  if (!cell) return null;
+  const want = targetUnit?.toLowerCase();
+  if (!cell.unit || !want || cell.unit === want) return cell.n;
+  if (cell.unit === "s" && want === "ms") return Math.round(cell.n * 1e9) / 1e6;
+  if (cell.unit === "ms" && want === "s") return Math.round(cell.n * 1e6) / 1e9;
+  return null;
 }
 
 const STATUS_WORDS: Record<string, SignoffStatus> = {
@@ -141,29 +165,37 @@ const STATUS_WORDS: Record<string, SignoffStatus> = {
 const isStatus = (s: unknown): s is SignoffStatus =>
   s === "approved" || s === "pending" || s === "rejected";
 
+const isObject = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
+const objects = <T>(x: unknown): T[] => (Array.isArray(x) ? (x.filter(isObject) as T[]) : []);
+const strings = (x: unknown): string[] => (Array.isArray(x) ? x.filter((v): v is string => typeof v === "string") : []);
+
 export function applyTablePlan(
   fileName: string,
   table: Table,
-  plan: TablePlan,
+  rawPlan: TablePlan,
   targets: ImportTargets,
 ): StructuredFile {
+  // The plan comes from a model, so none of its shape is trusted.
+  const plan: TablePlan = isObject(rawPlan) ? rawPlan : {};
   const out: StructuredFile = {
     fileName,
-    description: plan.description?.slice(0, 160) || "Table",
+    description: (typeof plan.description === "string" && plan.description.slice(0, 160)) || "Table",
     items: [],
-    rejected: [],
+    rejected: isObject(rawPlan) ? [] : ["The AI's answer could not be read. Try the file again."],
   };
   const metricKeys = new Set(targets.metrics.map((t) => t.key));
   const signoffKeys = new Set(targets.signoffs.map((t) => t.key));
   const hasColumn = (c?: string): c is string => !!c && table.headers.includes(c);
 
-  for (const count of plan.counts ?? []) {
-    const key = count.key ?? "";
+  for (const count of objects<NonNullable<TablePlan["counts"]>[number]>(plan.counts)) {
+    const key = typeof count.key === "string" ? count.key : "";
     if (!metricKeys.has(key)) {
       out.rejected.push(`Count for unknown metric "${key}" ignored.`);
       continue;
     }
-    const filters = (count.filters ?? []).filter((f) => f.values?.length);
+    const filters = objects<{ column?: string; values?: unknown }>(count.filters)
+      .map((f) => ({ column: f.column, values: strings(f.values) }))
+      .filter((f) => f.values.length > 0);
     const bad = filters.find((f) => !hasColumn(f.column));
     if (bad || filters.length === 0) {
       out.rejected.push(`Count for ${key} ignored: ${bad ? `no column "${bad.column}"` : "no filters"}.`);
@@ -189,8 +221,8 @@ export function applyTablePlan(
     out.items.push({ group: "metric", key, value: rows.length, source: { kind: "count", rule, rows } });
   }
 
-  for (const cell of plan.cells ?? []) {
-    const key = cell.key ?? "";
+  for (const cell of objects<NonNullable<TablePlan["cells"]>[number]>(plan.cells)) {
+    const key = typeof cell.key === "string" ? cell.key : "";
     const row = Number(cell.row);
     const record = Number.isInteger(row) && row >= 1 ? table.records[row - 1] : undefined;
     if (!record || !hasColumn(cell.column)) {
@@ -204,9 +236,10 @@ export function applyTablePlan(
         out.rejected.push(`Value for unknown metric "${key}" ignored.`);
         continue;
       }
-      const value = parseNumberCell(raw);
+      const unit = targets.metrics.find((t) => t.key === key)?.unit;
+      const value = parseMeasured(raw, unit);
       if (value === null) {
-        out.rejected.push(`${key}: "${raw}" in row ${row} is not a number.`);
+        out.rejected.push(`${key}: "${raw}" in row ${row} is not a number${unit ? ` in ${unit}` : ""}.`);
         continue;
       }
       out.items.push({ group: "metric", key, value, source });
@@ -254,23 +287,24 @@ export function titleFromFileName(fileName: string): string {
 export function applyDocumentPlan(
   fileName: string,
   text: string,
-  plan: DocumentPlan,
+  rawPlan: DocumentPlan,
   targets: ImportTargets,
 ): StructuredFile {
+  const plan: DocumentPlan = isObject(rawPlan) ? rawPlan : {};
   const content = text.replace(/\r\n/g, "\n").trim();
   const out: StructuredFile = {
     fileName,
-    description: plan.description?.slice(0, 160) || "Document",
+    description: (typeof plan.description === "string" && plan.description.slice(0, 160)) || "Document",
     items: [],
-    rejected: [],
+    rejected: isObject(rawPlan) ? [] : ["The AI's answer could not be read. Try the file again."],
   };
   const metricKeys = new Set(targets.metrics.map((t) => t.key));
   const signoffKeys = new Set(targets.signoffs.map((t) => t.key));
   const slots = new Set(targets.documents.map((t) => t.key));
 
-  for (const m of plan.metrics ?? []) {
-    const key = m.key ?? "";
-    const quote = (m.quote ?? "").trim();
+  for (const m of objects<NonNullable<DocumentPlan["metrics"]>[number]>(plan.metrics)) {
+    const key = typeof m.key === "string" ? m.key : "";
+    const quote = typeof m.quote === "string" ? m.quote.trim() : "";
     if (!metricKeys.has(key)) out.rejected.push(`Value for unknown metric "${key}" ignored.`);
     else if (typeof m.value !== "number" || !quote || !quoteAppearsIn(quote, content))
       out.rejected.push(`${key}: the quoted sentence is not in the document.`);
@@ -279,21 +313,21 @@ export function applyDocumentPlan(
     else out.items.push({ group: "metric", key, value: m.value, source: { kind: "quote", quote } });
   }
 
-  for (const s of plan.signoffs ?? []) {
-    const key = s.key ?? "";
-    const quote = (s.quote ?? "").trim();
+  for (const s of objects<NonNullable<DocumentPlan["signoffs"]>[number]>(plan.signoffs)) {
+    const key = typeof s.key === "string" ? s.key : "";
+    const quote = typeof s.quote === "string" ? s.quote.trim() : "";
     if (!signoffKeys.has(key)) out.rejected.push(`Sign-off for unknown role "${key}" ignored.`);
     else if (!isStatus(s.status)) out.rejected.push(`${key}: no clear sign-off status.`);
     else if (!quote || !quoteAppearsIn(quote, content))
       out.rejected.push(`${key}: the quoted sentence is not in the document.`);
     else {
       // A name is kept only if it is written in the quote itself.
-      const by = s.by && quoteAppearsIn(s.by, quote) ? s.by.trim() : undefined;
+      const by = typeof s.by === "string" && s.by && quoteAppearsIn(s.by, quote) ? s.by.trim() : undefined;
       out.items.push({ group: "signoff", key, value: { status: s.status, by }, source: { kind: "quote", quote } });
     }
   }
 
-  const slot = plan.documentSlot ?? null;
+  const slot = typeof plan.documentSlot === "string" ? plan.documentSlot : null;
   if (slot && slots.has(slot)) {
     out.items.push({
       group: "document",

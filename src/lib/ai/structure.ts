@@ -1,5 +1,5 @@
 import type { AskJson } from "./provider";
-import { csvRecords } from "../import/csv";
+import { csvRecords, detectDelimiter } from "../import/csv";
 import {
   MAX_DOCUMENT,
   applyDocumentPlan,
@@ -57,14 +57,25 @@ export function uploadKind(fileName: string): UploadKind | null {
   return null;
 }
 
+/** Binary files (zip, xlsx, pdf, images) decode to NULs or replacement characters. */
+export function looksBinary(text: string): boolean {
+  const head = text.slice(0, 4000);
+  if (head.includes("\u0000")) return true;
+  const bad = (head.match(/\uFFFD/g) ?? []).length;
+  return head.length > 0 && bad / head.length > 0.02;
+}
+
 export async function structureFile(
   ask: AskJson,
   targets: ImportTargets,
   file: { name: string; text: string },
 ): Promise<StructuredFile> {
   const kind = uploadKind(file.name);
+  const rejectFile = (description: string, why: string): StructuredFile => ({ fileName: file.name, description, items: [], rejected: [why] });
+  if (!kind) return rejectFile("Unsupported file", "Upload .csv or .tsv tables, or .txt or .md documents. Export spreadsheets and PDFs as CSV or text first.");
+  if (looksBinary(file.text)) return rejectFile("Not readable", "This does not look like readable text. Export it as CSV or plain text and try again.");
   if (kind === "table") {
-    const table = csvRecords(file.text, /\.tsv$/i.test(file.name) ? "\t" : ",");
+    const table = csvRecords(file.text, /\.tsv$/i.test(file.name) ? "\t" : detectDelimiter(file.text));
     if (table.headers.length === 0 || table.records.length === 0) {
       return { fileName: file.name, description: "Empty table", items: [], rejected: ["The file has no data rows."] };
     }

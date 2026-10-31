@@ -68,6 +68,13 @@ const gateStatus = v.union(
   v.literal("unknown"),
 );
 
+export const releaseType = v.union(
+  v.literal("cutover"),
+  v.literal("peak"),
+  v.literal("standard"),
+  v.literal("custom"),
+);
+
 const recommendation = v.union(
   v.literal("go"),
   v.literal("conditional"),
@@ -78,15 +85,15 @@ export default defineSchema({
   releases: defineTable({
     slug: v.string(),
     name: v.string(),
-    type: v.union(
-      v.literal("cutover"),
-      v.literal("peak"),
-      v.literal("standard"),
-    ),
+    type: releaseType,
     targetDate: v.string(),
     summary: v.string(),
     gates: v.array(gate),
     signals,
+    // Per-value arrival time and source file, so old data can be called out.
+    signalMeta: v.optional(
+      v.record(v.string(), v.object({ at: v.number(), source: v.optional(v.string()) })),
+    ),
     isSample: v.boolean(),
     // "org:<id>" or "user:<id>" from the Clerk session: only that workspace
     // can see and edit the release. Samples have none and are read-only.
@@ -97,7 +104,7 @@ export default defineSchema({
     lastChange: v.optional(
       v.object({
         at: v.number(),
-        kind: v.union(v.literal("import"), v.literal("checklist")),
+        kind: v.union(v.literal("import"), v.literal("checklist"), v.literal("signoff")),
         summary: v.string(),
         files: v.optional(v.array(v.string())),
       }),
@@ -141,7 +148,35 @@ export default defineSchema({
     decidedById: v.optional(v.string()),
     reason: v.string(),
     overrode: v.boolean(),
+  })
+    .index("by_release_workspace", ["releaseId", "workspaceId"])
+    .index("by_workspace", ["workspaceId"]),
+
+  // Every sign-off given or withdrawn in the app. Append-only, so who approved
+  // what, and when, stays on record even after a later change.
+  signoffEvents: defineTable({
+    releaseId: v.id("releases"),
+    workspaceId: v.string(),
+    role: v.string(),
+    status: v.union(v.literal("approved"), v.literal("pending"), v.literal("rejected")),
+    by: v.string(),
+    byId: v.string(),
+    note: v.optional(v.string()),
   }).index("by_release_workspace", ["releaseId", "workspaceId"]),
+
+  // Workspace tokens for pushing values from CI or scripts. Only a SHA-256
+  // hash is stored; the token itself is shown once, when it is created.
+  apiTokens: defineTable({
+    workspaceId: v.string(),
+    createdById: v.string(),
+    name: v.string(),
+    hash: v.string(),
+    last4: v.string(),
+    lastUsedAt: v.optional(v.number()),
+    revokedAt: v.optional(v.number()),
+  })
+    .index("by_hash", ["hash"])
+    .index("by_workspace", ["workspaceId"]),
 
   // One AI key per user, encrypted with AI_KEY_SECRET (bound to the user id).
   // The plaintext key never leaves Convex actions.

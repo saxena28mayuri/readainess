@@ -10,8 +10,10 @@
 
 import type * as admin from "../admin.js";
 import type * as ai from "../ai.js";
+import type * as apiTokens from "../apiTokens.js";
 import type * as decisions from "../decisions.js";
 import type * as evaluations from "../evaluations.js";
+import type * as http from "../http.js";
 import type * as releases from "../releases.js";
 import type * as workspace from "../workspace.js";
 
@@ -24,8 +26,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   ai: typeof ai;
+  apiTokens: typeof apiTokens;
   decisions: typeof decisions;
   evaluations: typeof evaluations;
+  http: typeof http;
   releases: typeof releases;
   workspace: typeof workspace;
 }>;

@@ -44,6 +44,31 @@ export function parseCsv(text: string, delimiter = ","): string[][] {
   return rows.filter((r) => r.some((cell) => cell.trim() !== ""));
 }
 
+const DELIMITERS = [",", ";", "\t", "|"];
+
+/** Picks the delimiter used by the header line, ignoring any inside quotes. Defaults to a comma. */
+export function detectDelimiter(text: string): string {
+  const line = text.replace(/^\uFEFF/, "").split(/\r?\n/).find((l) => l.trim() !== "") ?? "";
+  const counts = new Map(DELIMITERS.map((d) => [d, 0]));
+  let quoted = false;
+  for (const ch of line) {
+    if (ch === '"') quoted = !quoted;
+    else if (!quoted && counts.has(ch)) counts.set(ch, counts.get(ch)! + 1);
+  }
+  let best = ",";
+  let most = 0;
+  for (const [d, n] of counts) if (n > most) [best, most] = [d, n];
+  return best;
+}
+
+/** True when pasted text is a table: two or more rows that mostly share the header's column count. */
+export function looksTabular(text: string): boolean {
+  const rows = parseCsv(text, detectDelimiter(text)).slice(0, 21);
+  if (rows.length < 2 || rows[0].length < 2) return false;
+  const matching = rows.slice(1).filter((r) => r.length === rows[0].length).length;
+  return matching / (rows.length - 1) >= 0.8;
+}
+
 /** Rows as objects keyed by trimmed header. Duplicate headers keep the first. */
 export function csvRecords(
   text: string,

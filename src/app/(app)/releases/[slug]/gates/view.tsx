@@ -14,6 +14,7 @@ import type { ComparisonOp, Gate, GateCategory } from "@/lib/readiness/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Kind = Gate["kind"];
 
@@ -241,7 +242,6 @@ function GateCard({
   onMove: (by: -1 | 1) => void;
   onRemove: () => void;
 }) {
-  const field = "h-8 rounded-md border border-input bg-sheet px-2 text-[13px] disabled:opacity-70";
   return (
     <fieldset id={`gate-${gate.id}`} disabled={disabled} className={cn("scroll-mt-24 rounded-lg border bg-sheet", Object.keys(problems).length > 0 && "border-nogo/50")}>
       <legend className="sr-only">Gate {index + 1}</legend>
@@ -298,14 +298,12 @@ function GateCard({
               className="h-8 w-56 font-mono text-[13px]"
             />
             <span className="text-muted-foreground">is</span>
-            <select
-              value={gate.metric.op}
-              onChange={(e) => onChange({ ...gate, metric: { ...gate.metric, op: e.target.value as ComparisonOp } })}
-              aria-label="Comparison"
-              className={field}
-            >
-              {ops.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            <Select value={gate.metric.op} onValueChange={(v) => onChange({ ...gate, metric: { ...gate.metric, op: v as ComparisonOp } })} items={ops}>
+              <SelectTrigger size="sm" aria-label="Comparison" className="w-28"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ops.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Input
               type="number"
               step="any"
@@ -369,9 +367,12 @@ function GateCard({
           </label>
           <label className="flex items-center gap-2">
             <span className="text-muted-foreground">Area</span>
-            <select value={gate.category} onChange={(e) => onChange({ ...gate, category: e.target.value as GateCategory } as Gate)} className={cn(field, "capitalize")}>
-              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <Select value={gate.category} onValueChange={(v) => onChange({ ...gate, category: v as GateCategory } as Gate)} items={categories.map((c) => ({ value: c, label: c }))}>
+              <SelectTrigger size="sm" aria-label="Area" className="w-36 capitalize"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </label>
           <label className="flex cursor-pointer items-center gap-2">
             <input type="checkbox" checked={gate.blocking} onChange={(e) => onChange({ ...gate, blocking: e.target.checked })} className="size-4 accent-[var(--primary)]" />
